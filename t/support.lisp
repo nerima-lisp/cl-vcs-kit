@@ -25,12 +25,12 @@
   (let ((directory
           (merge-pathnames
            (format nil "cl-vcs-kit-~36R/" (random (expt 2 60)))
-           (uiop:temporary-directory))))
+           (host-kit:temporary-directory))))
     (ensure-directories-exist directory)
     directory))
 
 (defun %write-test-file (directory name contents)
-  (let ((path (merge-pathnames name (uiop:ensure-directory-pathname directory))))
+  (let ((path (merge-pathnames name (host-kit:ensure-directory-pathname directory))))
     (with-open-file (stream path
                             :direction :output
                             :if-exists :supersede
@@ -79,6 +79,6 @@
             (git-init directory :initial-branch "main")
             (let ((,variable (open-repository directory)))
               ,@body))
-       (uiop:delete-directory-tree directory
+       (host-kit:delete-directory-tree directory
                                    :validate t
                                    :if-does-not-exist :ignore))))

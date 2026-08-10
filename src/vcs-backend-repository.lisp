@@ -54,7 +54,7 @@ In addition to the usual working-tree marker, recognize Git's bare
 repository layout.  A bare repository has no .git directory, so marker-only
 detection would otherwise miss a valid repository with HEAD, config,
 objects, and refs at its root."
-  (let ((directory (uiop:ensure-directory-pathname directory)))
+  (let ((directory (host-kit:ensure-directory-pathname directory)))
     (or (some (lambda (marker)
                 (probe-file (merge-pathnames marker directory)))
               (vcs-backend-markers backend))
@@ -141,9 +141,9 @@ the inherited environment respectively."
                          :environment environment)))
 
 (defun %vcs-parent-directory-string (path)
-  (let* ((pathname (uiop:ensure-directory-pathname (pathname path)))
-         (parent (uiop:ensure-directory-pathname
-                  (uiop:pathname-parent-directory-pathname pathname)))
+  (let* ((pathname (host-kit:ensure-directory-pathname (pathname path)))
+         (parent (host-kit:ensure-directory-pathname
+                  (host-kit:parent-directory-pathname pathname)))
          (pathname-string (namestring pathname))
          (parent-string (namestring parent)))
     (unless (string= pathname-string parent-string)

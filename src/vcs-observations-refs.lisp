@@ -94,7 +94,7 @@
           collect (%make-vcs-commit
                    :id (%vcs-empty-to-nil (aref fields base))
                    :parents (%split-whitespace-fields
-                             (aref fields (+ base 1)))
+                             (aref fields (1+ base)))
                    :tree (%vcs-empty-to-nil (aref fields (+ base 2)))
                    :author (%vcs-empty-to-nil (aref fields (+ base 3)))
                    :committer (%vcs-empty-to-nil (aref fields (+ base 5)))

@@ -9,8 +9,8 @@
             (:copier nil))
   "A Git repository handle rooted at DIRECTORY, taken by every Git entry point.
 MAKE-REPOSITORY builds one without probing, so GIT-DIRECTORY and
-COMMON-DIRECTORY stay NIL unless the caller supplies them; OPEN-REPOSITORY and
-DISCOVER-REPOSITORY resolve both to absolute paths."
+COMMON-DIRECTORY stay NIL unless the caller supplies them; OPEN-REPOSITORY
+resolves both to absolute paths."
   (directory "" :type string)
   (git-directory nil :type (or null string))
   (common-directory nil :type (or null string))

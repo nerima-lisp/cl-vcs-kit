@@ -1,7 +1,11 @@
 (in-package #:vcs-kit)
 
 (define-condition vcs-error (error)
-  ())
+  ()
+  (:report
+   (lambda (condition stream)
+     (declare (ignore condition))
+     (write-string "VCS operation failed" stream))))
 
 (defun %report-command-context (stream directory cause)
   (when directory

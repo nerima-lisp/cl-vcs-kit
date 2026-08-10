@@ -2,7 +2,7 @@
 
 (describe "repository remote and submodule metadata"
   (it "batches remote refspec configuration queries"
-    (let ((repository (make-vcs-repository (uiop:temporary-directory)
+    (let ((repository (make-vcs-repository (host-kit:temporary-directory)
                                            :backend :git))
           (calls nil))
       (with-replaced-function
@@ -54,7 +54,7 @@
                   '("--get-regexp" "^remote\\..*\\."))))))
 
   (it "propagates remote refspec configuration failures"
-    (let ((repository (make-vcs-repository (uiop:temporary-directory)
+    (let ((repository (make-vcs-repository (host-kit:temporary-directory)
                                            :backend :git)))
       (with-replaced-function
           (vcs-kit::%vcs-structured-run
@@ -75,7 +75,7 @@
                   2)))))
 
   (it "uses fallback submodule metadata and rejects malformed records"
-    (let ((repository (make-vcs-repository (uiop:temporary-directory)
+    (let ((repository (make-vcs-repository (host-kit:temporary-directory)
                                            :backend :git))
           (mode :valid))
       (with-replaced-function

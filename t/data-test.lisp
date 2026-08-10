@@ -3,14 +3,14 @@
 (describe "public data records"
   (it "preserves repository configuration"
     (let ((repository
-            (make-repository (uiop:temporary-directory)
+            (make-repository (host-kit:temporary-directory)
                              :git-directory "git"
                              :common-directory "common"
                              :bare-p t
                              :executable (%program-path "echo")
                              :default-timeout 7d0
                              :environment nil))
-          (inherited (make-repository (uiop:temporary-directory))))
+          (inherited (make-repository (host-kit:temporary-directory))))
       (expect (repository-p repository) :to-be-truthy)
       (expect (repository-git-directory repository) :to-equal "git")
       (expect (repository-common-directory repository) :to-equal "common")

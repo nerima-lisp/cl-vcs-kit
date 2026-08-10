@@ -2,7 +2,7 @@
 
 (in-package #:vcs-kit)
 
-(defmacro %define-ghq-get-or-clone (name command documentation)
+(defmacro %define-ghq-get-or-clone (name documentation command)
   "Define one of the GHQ repository retrieval entry points.
 
 GHQ-GET and GHQ-CLONE intentionally share their complete process contract;
@@ -60,18 +60,18 @@ drifting while leaving ordinary, inspectable functions at the public boundary."
 
 (%define-ghq-get-or-clone
  ghq-get
- "get"
  "Get or update one or more repositories through GHQ.
 
 REPOSITORY-SPECIFICATION may be one repository specification or a list of
-specifications.  ARGUMENTS is inserted before the specifications.")
+specifications.  ARGUMENTS is inserted before the specifications."
+ "get")
 
 (%define-ghq-get-or-clone
  ghq-clone
- "clone"
  "Clone one or more repositories through GHQ's CLONE alias.
 
-The keyword options and argument ordering match GHQ-GET.")
+The keyword options and argument ordering match GHQ-GET."
+ "clone")
 
 (defun ghq-list (&key query exact full-path vcs unique bare
                        (arguments nil)
