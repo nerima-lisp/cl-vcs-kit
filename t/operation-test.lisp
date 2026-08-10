@@ -1,88 +1,5 @@
 (in-package #:vcs-kit/test)
 
-(defparameter *generated-git-operations*
-  '(git-add git-stage git-commit git-branch git-switch git-checkout
-    git-restore git-reset git-rm git-mv git-clean git-tag
-    git-update-ref git-merge git-rebase git-cherry-pick
-    git-revert git-stash git-sparse-checkout git-rerere
-    git-cherry git-check-mailmap git-column git-diff-pairs
-    git-format-rev git-get-tar-commit-id
-    git-interpret-trailers git-last-modified git-ls-remote
-    git-name-rev git-patch-id git-range-diff git-show-index
-    git-var
-    git-backfill git-bugreport git-citool git-diagnose
-    git-difftool git-filter-branch git-for-each-repo git-help
-    git-instaweb git-mergetool git-pack-refs git-refs
-    git-replay git-repo git-request-pull
-    git-remote git-fetch git-pull git-push git-worktree
-    git-submodule git-notes git-bisect git-archive git-bundle
-    git-format-patch git-am git-apply git-fast-export
-    git-fast-import git-archimport git-cvsexportcommit
-    git-cvsimport git-cvsserver git-imap-send git-p4
-    git-quiltimport git-send-email git-svn git-maintenance
-    git-gc git-prune git-prune-packed git-repack git-fsck
-    git-commit-tree git-config git-credential git-fmt-merge-msg
-    git-fsck-objects git-hash-object git-hook git-index-pack
-    git-init-db git-mailinfo git-mailsplit git-merge-file
-    git-merge-index git-merge-tree git-mktag git-mktree
-    git-pack-objects git-pack-redundant git-read-tree
-    git-receive-pack git-replace git-send-pack git-stripspace
-    git-unpack-file git-unpack-objects git-update-index
-    git-update-server-info git-upload-archive git-upload-pack
-    git-verify-commit git-verify-pack git-verify-tag git-write-tree
-    git-checkout-index git-commit-graph git-multi-pack-index))
-
-(describe "generated Git operation families"
-  (it "exposes every documented checked operation"
-    (dolist (name *generated-git-operations*)
-      (expect (fboundp name) :to-be-truthy)))
-
-  (it "dispatches every generated operation through the checked runner"
-    (let ((repository (make-repository (uiop:temporary-directory)))
-          (calls 0))
-      (with-replaced-function
-          (vcs-kit::run-git/checked
-           (lambda (&rest arguments)
-             (declare (ignore arguments))
-             (incf calls)
-             (%fake-result)))
-        (dolist (name *generated-git-operations*)
-          (expect (process-success-p (funcall name repository))
-                  :to-be-truthy)))
-      (expect calls :to-equal (length *generated-git-operations*))))
-
-  (it "parses the specialized observation operations"
-    (let ((repository (make-repository (uiop:temporary-directory)))
-          (calls 0))
-      (with-replaced-function
-          (vcs-kit::run-git/checked
-           (lambda (repository command arguments &rest options)
-             (declare (ignore repository arguments options))
-             (incf calls)
-             (%fake-result
-              :stdout (if (string= command "rev-parse")
-                          (format nil " value ~%")
-                          ""))))
-        (expect (process-success-p (git-diff repository "HEAD"))
-                :to-be-truthy)
-        (expect (process-success-p (git-diff-stat repository "HEAD"))
-                :to-be-truthy)
-        (expect (git-diff-name-status repository "HEAD") :to-be nil)
-        (expect (git-diff-numstat repository "HEAD") :to-be nil)
-        (expect (process-success-p (git-diff-check repository "HEAD"))
-                :to-be-truthy)
-        (dolist (untracked-files '(:no :normal :all))
-        (expect (status-snapshot-p
-                 (git-status repository
-                             :untracked-files untracked-files
-                             :ignored t
-                             :show-stash t
-                             :no-renames t
-                             :arguments '("path")))
-                  :to-be-truthy))
-        (expect (git-rev-parse-value repository) :to-equal "value")
-      (expect calls :to-equal 9)))))
-
 (describe "backend-neutral VCS operations"
   (it "exposes the built-in backends and aliases"
     (dolist (name '(:git :mercurial :subversion :bazaar :fossil :darcs :pijul))
@@ -142,7 +59,7 @@
              (expect (eq (find-vcs-backend 'echo-short) backend)
                      :to-be-truthy)
              (let* ((repository
-                      (make-vcs-repository (uiop:temporary-directory)
+                      (make-vcs-repository (host-kit:temporary-directory)
                                            :backend :echo))
                     (result (vcs-status repository "item")))
                (expect (process-success-p result) :to-be-truthy)
@@ -159,6 +76,31 @@
         (when (find :echo (available-vcs-backends)
                     :key #'vcs-backend-name)
           (unregister-vcs-backend :echo)))))
+
+  (it "replaces a registered backend without retaining stale aliases"
+    (let ((original
+            (make-vcs-backend
+             :name :replaceable
+             :aliases '(:old-alias)
+             :commands '((:status . "old-status"))))
+          (replacement
+            (make-vcs-backend
+             :name :replaceable
+             :aliases '(:new-alias)
+             :commands '((:status . "new-status")))))
+      (unwind-protect
+           (progn
+             (register-vcs-backend original)
+             (register-vcs-backend replacement)
+             (expect (eq (find-vcs-backend :replaceable) replacement)
+                     :to-be-truthy)
+             (expect (eq (find-vcs-backend :new-alias) replacement)
+                     :to-be-truthy)
+             (%expect-condition vcs-unknown-backend-error
+               (find-vcs-backend :old-alias)))
+        (when (find :replaceable (available-vcs-backends)
+                    :key #'vcs-backend-name)
+          (unregister-vcs-backend :replaceable)))))
 
   (it "keeps declared capabilities authoritative"
     (let ((backend
@@ -180,6 +122,8 @@
                      :to-equal '(:status))
              (expect (vcs-backend-supports-structured-operation-p backend :status)
                      :to-be-truthy)
+             (expect (vcs-backend-supports-structured-operation-p backend :version)
+                     :to-be-falsy)
              (expect (vcs-structured-operations backend)
                      :to-equal '(:status))
              (expect (vcs-operation-command backend :version)
@@ -264,6 +208,13 @@
        :commands '((:status . "status"))))
     (%expect-condition error
       (make-vcs-backend
+       :name :undeclared-operation-kind
+       :capabilities '(:status)
+       :operation-kinds '((:version . :exact))
+       :commands '((:status . "status")
+                   (:version . "version"))))
+    (%expect-condition error
+      (make-vcs-backend
        :name :invalid-mapping-entry
        :operation-kinds '(invalid)
        :commands '((:status . "status"))))
@@ -327,136 +278,13 @@
                                                 :executable (%program-path "echo"))))
                  (expect (vcs-repository-directory repository)
                          :to-equal (namestring
-                                    (uiop:ensure-directory-pathname parent)))
+                                    (host-kit:ensure-directory-pathname parent)))
                  (expect (eq (vcs-repository-backend repository) backend)
                          :to-be-truthy))))
         (when (find :marker-echo (available-vcs-backends)
                     :key #'vcs-backend-name)
           (unregister-vcs-backend :marker-echo))
-        (uiop:delete-directory-tree parent
-                                     :validate t
-                                     :if-does-not-exist :ignore))))
-
-  (it "reports unknown backend designators"
-    (let ((condition
-            (%expect-condition vcs-unknown-backend-error
-              (find-vcs-backend :missing-backend))))
-      (expect (vcs-unknown-backend-error-designator condition)
-              :to-equal :missing-backend)
-      (expect (member :git
-                      (vcs-unknown-backend-error-known-backends condition))
-              :to-be-truthy)))
-
-  (it "rejects malformed backend designators with a typed argument error"
-    (%expect-condition vcs-argument-error
-      (find-vcs-backend 42)))
-
-  (it "parses worktree flags with and without explanatory values"
-    (let ((worktree
-            (vcs-kit::%vcs-worktree
-             '("worktree /tmp/linked" "HEAD abc123"
-               "branch refs/heads/topic"
-               "locked reason"
-               "prunable reason"
-               "bare"))))
-      (expect (vcs-worktree-path worktree) :to-equal "/tmp/linked")
-      (expect (vcs-worktree-head worktree) :to-equal "abc123")
-      (expect (vcs-worktree-branch worktree) :to-equal "topic")
-      (expect (vcs-worktree-bare-p worktree) :to-be-truthy)
-      (expect (vcs-worktree-locked-p worktree) :to-be-truthy)
-      (expect (vcs-worktree-prunable-p worktree) :to-be-truthy))
-    (let ((detached (vcs-kit::%vcs-worktree '("branch detached"))))
-      (expect (vcs-worktree-branch detached) :to-equal "detached")))
-
-  (it "dispatches the extended native operation families"
-    (let ((repository (make-vcs-repository (uiop:temporary-directory)
-                                           :backend :git
-                                           :executable (%program-path "echo"))))
-      (dolist (operation '((vcs-worktree . "worktree")
-                           (vcs-submodule . "submodule")
-                           (vcs-bundle . "bundle")
-                           (vcs-maintenance . "maintenance")
-                           (vcs-verify . "fsck")))
-        (let ((result (funcall (car operation) repository)))
-          (expect (process-success-p result) :to-be-truthy)
-          (expect (process-result-stdout result)
-                  :to-equal (format nil "~A~%" (cdr operation)))))))
-
-  (it "detects repository metadata and reports missing metadata"
-    (let ((directory (%temporary-test-directory)))
-      (unwind-protect
-           (progn
-             (ensure-directories-exist (merge-pathnames ".hg/" directory))
-             (expect (eq (detect-vcs-backend directory)
-                         (find-vcs-backend :mercurial))
-                     :to-be-truthy)
-             (let ((repository (open-vcs-repository directory)))
-               (expect (vcs-repository-p repository) :to-be-truthy)
-               (expect (vcs-backend-name
-                        (vcs-repository-backend repository))
-                       :to-equal :mercurial))
-             (let* ((nested (merge-pathnames "nested/child/" directory))
-                    (repository (progn
-                                  (ensure-directories-exist nested)
-                                  (discover-vcs-repository nested))))
-               (expect (vcs-repository-directory repository)
-                       :to-equal (namestring
-                                  (uiop:ensure-directory-pathname directory)))
-               (expect (vcs-backend-name
-                        (vcs-repository-backend repository))
-                       :to-equal :mercurial))
-             (let ((empty-directory (%temporary-test-directory)))
-               (unwind-protect
-                    (let ((condition
-                            (%expect-condition vcs-backend-detection-error
-                              (open-vcs-repository empty-directory))))
-                      (expect (vcs-backend-detection-error-directory condition)
-                              :to-equal (namestring empty-directory)))
-                 (uiop:delete-directory-tree empty-directory
-                                              :validate t
-                                              :if-does-not-exist :ignore))))
-        (uiop:delete-directory-tree directory
-                                     :validate t
-                                     :if-does-not-exist :ignore))))
-
-  (it "detects bare Git repositories"
-    (let ((directory (%temporary-test-directory)))
-      (unwind-protect
-           (progn
-             (git-init directory :bare t)
-             (expect (eq (detect-vcs-backend directory)
-                         (find-vcs-backend :git))
-                     :to-be-truthy)
-             (let ((repository (open-vcs-repository directory)))
-               (expect (vcs-repository-p repository) :to-be-truthy)
-               (expect (vcs-backend-name
-                        (vcs-repository-backend repository))
-                       :to-equal :git)))
-        (uiop:delete-directory-tree directory
-                                     :validate t
-                                     :if-does-not-exist :ignore))))
-
-  (it "can reject metadata when executable validation fails"
-    (let ((directory (%temporary-test-directory)))
-      (unwind-protect
-           (progn
-             (ensure-directories-exist (merge-pathnames ".git/" directory))
-             (expect (detect-vcs-backend
-                      directory
-                      :candidates '(:git)
-                      :validate-executable t
-                      :executable "/bin/false")
-                     :to-be nil)
-             (let ((condition
-                     (%expect-condition vcs-backend-detection-error
-                       (open-vcs-repository
-                        directory
-                        :backend :git
-                        :validate-executable t
-                        :executable "/bin/false"))))
-               (expect (vcs-backend-detection-error-directory condition)
-                       :to-equal (namestring directory))))
-        (uiop:delete-directory-tree directory
+        (host-kit:delete-directory-tree parent
                                      :validate t
                                      :if-does-not-exist :ignore))))
 

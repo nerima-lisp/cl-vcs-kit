@@ -1,6 +1,12 @@
 (in-package #:vcs-kit/test)
 
 (describe "Asynchronous process and structured GHQ APIs"
+  (it "uses the default GHQ management options for root queries"
+    (let ((roots (ghq-roots :executable (%program-path "echo")))
+          (primary (ghq-root :executable (%program-path "echo"))))
+      (expect roots :to-equal '("root"))
+      (expect primary :to-equal "root")))
+
   (it "preserves process-kit tasks and event inspection"
     (let ((task (run-git-async
                  nil
@@ -24,6 +30,10 @@
         (expect (vcs-task-callback-errors task) :to-be nil)
         (expect (vcs-task-dropped-event-count task) :to-equal 0)
         (let ((step (next-vcs-event task :cursor 1 :timeout 0d0)))
+          (expect (member (process-kit:process-event-step-status step)
+                          '(:event :gap :terminal :timeout))
+                  :to-be-truthy))
+        (let ((step (next-vcs-event task)))
           (expect (member (process-kit:process-event-step-status step)
                           '(:event :gap :terminal :timeout))
                   :to-be-truthy)))
@@ -63,9 +73,30 @@
               :to-equal
               (format nil "--version~%"))))
 
+  (it "uses the backend-neutral version fallback when no mapping exists"
+    (let ((backend
+            (make-vcs-backend
+             :name :version-fallback
+             :executable (%program-path "echo")
+             :commands '((:status . "status")))))
+      (unwind-protect
+           (progn
+             (register-vcs-backend backend)
+             (let ((result (vcs-version :backend :version-fallback)))
+               (expect (process-success-p result) :to-be-truthy))
+             (multiple-value-bind (result completed-p)
+                 (await-vcs-task
+                  (vcs-version-async
+                   :backend :version-fallback
+                   :executable (%program-path "echo"))
+                  :timeout 5d0)
+               (expect completed-p :to-be-truthy)
+               (expect (process-success-p result) :to-be-truthy)))
+        (unregister-vcs-backend :version-fallback))))
+
   (it "starts a normalized backend operation task"
     (let* ((repository
-             (make-vcs-repository (uiop:temporary-directory)
+             (make-vcs-repository (host-kit:temporary-directory)
                                   :backend :git
                                   :executable (%program-path "echo")))
            (task (run-vcs-operation-async repository :status '("file"))))
@@ -155,6 +186,9 @@
     (expect (vcs-kit::%ghq-relative-path "/" (list "/"))
             :to-equal
             "")
+    (expect (vcs-kit::%ghq-relative-path "/owner/project" (list "/"))
+            :to-equal
+            "owner/project")
     (expect (vcs-kit::%ghq-relative-path
              "/root/src/owner/project"
              (list "/root/" "/root/src/"))

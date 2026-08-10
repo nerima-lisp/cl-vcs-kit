@@ -31,22 +31,23 @@ mkdocs build --strict \
 
 ## Tests and the coverage ratchet
 
-`sbcl --script run-tests.lisp` is the test entry point, and it always measures
-coverage. There is no opt-in flag: the script compiles the library with
+`nix develop --command sbcl --script run-tests.lisp` is the reproducible test
+entry point, and it always measures coverage. There is no opt-in flag: the script compiles the library with
 sb-cover instrumentation, runs the suite, measures expression and branch
 coverage over `src/`, prints both, and exits non-zero when either falls below
 a floor recorded in `run-tests.lisp`.
 
 Coverage is therefore a gate rather than a report. `nix run .#test`,
-`nix flake check`, and a direct `sbcl --script run-tests.lisp` all run this one
-script, so CI enforces the same floor a contributor sees locally, and a change
-that lowers coverage fails the check even when every test passes.
+`nix flake check`, and a direct `sbcl --script run-tests.lisp` with the required
+ASDF dependencies registered all run this one script, so CI enforces the same
+floor a contributor sees locally, and a change that lowers coverage fails the
+check even when every test passes.
 
-The floors live in `run-tests.lisp` as `+minimum-expression-coverage+` (92.3)
-and `+minimum-branch-coverage+` (86.0). The current measured baseline is
-expression 92.4% and branch 86.1%; each floor sits a small margin below that
-measurement so the suite can ratchet upward without turning harmless
-instrumentation shifts into noise.
+The floors live in `run-tests.lisp` as `+minimum-expression-coverage+` and
+`+minimum-branch-coverage+`. The script prints the measured result for each
+run, so the current baseline is intentionally not duplicated here. The floors
+are ratcheted to the measured baseline; any future decrease must be accompanied
+by a test or an explicit reduction justified by the change.
 
 Package declaration/export files and the static backend catalog are loaded
 before CL-WEAVE starts the suite, so they are excluded from the behavioral
@@ -64,7 +65,7 @@ One flag remains. `--coverage-report-directory <dir>` additionally writes an
 sb-cover HTML report to `<dir>`:
 
 ```sh
-sbcl --script run-tests.lisp --coverage-report-directory /tmp/cl-vcs-kit-coverage
+nix develop --command sbcl --script run-tests.lisp --coverage-report-directory /tmp/cl-vcs-kit-coverage
 ```
 
 When a change genuinely and justifiably lowers coverage, edit the floor in

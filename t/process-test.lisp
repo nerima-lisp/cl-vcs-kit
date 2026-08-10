@@ -1,5 +1,39 @@
 (in-package #:vcs-kit/test)
 
+(describe "process option data"
+  (it "keeps omitted and explicitly supplied options distinct"
+    (let* ((token (make-vcs-cancellation-token))
+           (callback (lambda (&rest arguments)
+                       (declare (ignore arguments))))
+           (options
+             (vcs-kit::%vcs-process-options
+              :input nil
+              :timeout 3
+              :max-output-characters 4096
+              :cancellation-token token
+              :grace-period 0
+              :drain-timeout-seconds 2
+              :event-callback callback)))
+      (expect (getf options :input) :to-be nil)
+      (expect (getf options :timeout) :to-equal 3)
+      (expect (getf options :max-output-characters) :to-equal 4096)
+      (expect (getf options :cancellation-token) :to-be token)
+      (expect (getf options :grace-period) :to-equal 0)
+      (expect (getf options :drain-timeout-seconds) :to-equal 2)
+      (expect (getf options :event-callback) :to-be callback)
+      (expect (getf options :on-timeout) :to-be :return)
+      (expect (getf options :on-cancel) :to-be :return)))
+
+  (it "omits optional process keys when they were not supplied"
+    (let ((options (vcs-kit::%vcs-process-options :timeout 7)))
+      (expect (getf options :timeout) :to-equal 7)
+      (expect (getf options :on-timeout) :to-be :return)
+      (expect (getf options :on-cancel) :to-be :return)
+      (dolist (key '(:input :max-output-characters :cancellation-token
+                     :grace-period :drain-timeout-seconds :event-callback))
+        (expect (getf options key) :to-be nil)
+        (expect (member key options) :to-be nil)))))
+
 (describe "Git process execution"
   (it "returns the direct process-kit result"
     (let ((result (run-git nil

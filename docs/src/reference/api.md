@@ -6,7 +6,7 @@ purpose so that the detailed guides can explain the intended call boundaries.
 ## Repository and detection
 
 `repository`, `repository-p`, `make-repository`, `open-repository`,
-`discover-repository`, `vcs-repository`, `vcs-repository-p`,
+`vcs-repository`, `vcs-repository-p`,
 `make-vcs-repository`, `open-vcs-repository`, `discover-vcs-repository`, and
 `detect-vcs-backend` form the handle and detection layer.
 
@@ -47,6 +47,11 @@ than defined here, and they carry that package's documentation, so
 `(describe 'vcs-kit:process-result-stdout)` shows no docstring from this
 system.
 
+Every synchronous and asynchronous command emits a structured `log-kit`
+event through `vcs-kit:*vcs-logger*`. The default logger is silent. Bind that
+special variable to a `log-kit` logger with a handler when command telemetry is
+needed; the event includes the executable, arguments, directory, and timeout.
+
 Typed failures are grouped by family in [conditions](conditions.md).
 
 !!! note "Documented deviation from the API standard"
@@ -85,7 +90,7 @@ anything they do not cover is still reachable through `run-git`. The groups
 below follow the export sections in `src/package.lisp`.
 
 Repository creation is `git-init` and `git-clone`, alongside the
-`open-repository` and `discover-repository` handles above.
+`open-repository` handle above.
 
 Observation covers `git-status`, `git-diff` with its `git-diff-stat`,
 `git-diff-name-status` and `git-diff-numstat` variants, `git-log`, `git-show`,

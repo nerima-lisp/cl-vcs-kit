@@ -80,6 +80,76 @@
               :to-equal
               "/full/path")))
 
+  (it "returns NIL when GHQ cannot resolve a root or repository path"
+    (with-replaced-function
+        (vcs-kit::%run-ghq-checked
+         (lambda (&rest arguments)
+           (declare (ignore arguments))
+           (%fake-result :stdout "")))
+      (expect (ghq-root) :to-be nil)
+      (expect (ghq-path "owner/project") :to-be nil)))
+
+  (it "builds GHQ management commands through the shared runner"
+    (let ((calls nil))
+      (with-replaced-function
+          (vcs-kit::%run-ghq-checked
+           (lambda (command arguments &rest options)
+             (push (list command arguments options) calls)
+             (if (string= command "root")
+                 (%fake-result :stdout (format nil "/one~%/two~%"))
+                 (%fake-result))))
+        (expect (ghq-roots :all t :arguments '("--custom"))
+                :to-equal
+                '("/one" "/two"))
+        (expect (ghq-rm "owner/project" :dry-run t :bare t
+                         :arguments '("--custom"))
+                :to-be-truthy)
+        (expect (ghq-create "owner/project" :vcs "git" :bare t
+                             :arguments '("--custom"))
+                :to-be-truthy)
+        (expect (ghq-migrate "/tmp/repository" :yes t :dry-run t
+                              :arguments '("--custom")
+                              :working-directory "/tmp")
+                :to-be-truthy)
+        (expect (ghq-root :all t)
+                :to-equal
+                '("/one" "/two")))
+      (expect (length calls) :to-equal 5)
+      (let ((root (fifth calls))
+            (migrate (second calls))
+            (create (third calls))
+            (rm (fourth calls)))
+        (expect (first root) :to-equal "root")
+        (expect (second root) :to-equal '("--all" "--custom"))
+        (expect (first migrate) :to-equal "migrate")
+        (expect (second migrate)
+                :to-equal '("-y" "--dry-run" "--custom" "/tmp/repository"))
+        (expect (first create) :to-equal "create")
+        (expect (second create)
+                :to-equal '("--vcs" "git" "--bare" "--custom" "owner/project"))
+        (expect (first rm) :to-equal "rm")
+        (expect (second rm)
+                :to-equal '("--dry-run" "--bare" "--custom" "owner/project")))))
+
+  (it "omits optional management switches when disabled"
+    (let ((calls nil))
+      (with-replaced-function
+          (vcs-kit::%run-ghq-checked
+           (lambda (command arguments &rest options)
+             (declare (ignore options))
+             (push (list command arguments) calls)
+             (%fake-result :stdout (if (string= command "root") "/root\n" ""))))
+        (ghq-roots)
+        (ghq-rm "owner/project")
+        (ghq-create "owner/project")
+        (ghq-migrate "/tmp/repository"))
+      (expect (nreverse calls)
+              :to-equal
+              '(("root" nil)
+                ("rm" ("owner/project"))
+                ("create" ("owner/project"))
+                ("migrate" ("/tmp/repository"))))))
+
   (it "signals a typed condition for a checked non-zero exit"
     (let ((condition
             (%expect-condition ghq-exit-error
@@ -91,6 +161,13 @@
       (expect (process-result-exit-code (ghq-error-result condition))
               :to-equal
               1)))
+
+  (it "returns an unchecked failed result when checking is disabled"
+    (let ((result (run-ghq "ignored"
+                           nil
+                           :executable (%program-path "false"))))
+      (expect (process-success-p result) :to-be nil)
+      (expect (process-result-exit-code result) :to-equal 1)))
 
   (it "rejects invalid command arguments with typed conditions"
     (let ((condition

@@ -16,28 +16,34 @@
 ;;;; unexplained drop is the regression this gate exists to catch.
 
 (require :asdf)
+(asdf:load-system "cl-host-kit")
 
-(defparameter +minimum-expression-coverage+ 92.3
-  "Percentage floor for src/ expression coverage. Measured 92.4% after excluding declaration/data-only forms.")
+(defparameter +minimum-expression-coverage+ 93.5
+  "Percentage floor for src/ expression coverage. Current measured ratchet is 93.5% after excluding declaration/data-only forms.")
 
-(defparameter +minimum-branch-coverage+ 86.0
-  "Percentage floor for src/ branch coverage. Measured 86.1% (446/518).")
+(defparameter +minimum-branch-coverage+ 91.2
+  "Percentage floor for src/ branch coverage. Current measured ratchet is 91.2% (469/514, rounded).")
+
+(defun call-exported-function (package name &rest arguments)
+  (let ((symbol (find-symbol name package)))
+    (unless (and symbol (fboundp symbol))
+      (error "Missing exported function ~A:~A" package name))
+    (apply (symbol-function symbol) arguments)))
 
 (defun script-directory ()
-  (uiop:pathname-directory-pathname
-   (uiop:ensure-pathname (or *load-pathname* *default-pathname-defaults*)
-                         :defaults *default-pathname-defaults*)))
+  (host-kit:pathname-directory-pathname
+   (host-kit:ensure-pathname (or *load-pathname* *default-pathname-defaults*))))
 
 (defun configure-local-source-registry (root)
   (asdf:initialize-source-registry
    `(:source-registry (:tree ,root) :inherit-configuration)))
 
 (defun coverage-report-directory ()
-  (let ((arguments (uiop:command-line-arguments)))
+  (let ((arguments (host-kit:command-line-arguments)))
     (loop for remaining on arguments
           when (string= (first remaining) "--coverage-report-directory")
             do (return
-                 (uiop:ensure-directory-pathname
+                 (host-kit:ensure-directory-pathname
                   (or (second remaining)
                       (error "--coverage-report-directory requires a value")))))))
 
@@ -60,7 +66,8 @@ DEFPARAMETER forms themselves run before the test suite starts."
             "src/package-exports-git.lisp"
             "src/package-exports-vcs.lisp"
             "src/package-exports-ghq.lisp"
-            "src/vcs-backend-data.lisp")))
+            "src/vcs-backend-data.lisp"
+            "src/types.lisp")))
 
 (defun coverage-policy-symbol ()
   (or (find-symbol "STORE-COVERAGE-DATA" "SB-COVER")
@@ -84,13 +91,15 @@ is already compiled -- the caller must force a recompile for it to take."
             kind
             actual
             minimum)
-    (uiop:quit 1)))
+    (host-kit:quit 1)))
 
 (defun enforce-coverage-floors (root)
-  (let* ((statistics (uiop:symbol-call
-                      :cl-weave :coverage-statistics
-                      :include-pathnames (coverage-source-pathnames root)
-                      :exclude-pathnames (coverage-excluded-source-pathnames root)))
+  (let* ((source-pathnames (coverage-source-pathnames root))
+         (excluded-pathnames (coverage-excluded-source-pathnames root))
+         (statistics (call-exported-function
+                      :cl-weave "COVERAGE-STATISTICS"
+                      :include-pathnames source-pathnames
+                      :exclude-pathnames excluded-pathnames))
          (expression-covered (getf statistics :expression-covered))
          (expression-total (getf statistics :expression-total))
          (branch-covered (getf statistics :branch-covered))
@@ -99,6 +108,15 @@ is already compiled -- the caller must force a recompile for it to take."
            (coverage-percentage expression-covered expression-total))
          (branch-percentage
            (coverage-percentage branch-covered branch-total)))
+    ;; An empty or stale pathname set means the filter itself was wrong. Do
+    ;; not let the coverage reporter turn that into a vacuous success.
+    (when (or (null source-pathnames)
+              (some (lambda (pathname)
+                      (not (probe-file pathname)))
+                    source-pathnames))
+      (format *error-output*
+              "~&Coverage source pathnames are empty or missing.~%")
+      (host-kit:quit 1))
     ;; A zero total means instrumentation never took: the library loaded from
     ;; stale FASLs, or the include-pathname filter matched nothing because the
     ;; root resolved differently than expected. Every percentage would then be
@@ -107,7 +125,7 @@ is already compiled -- the caller must force a recompile for it to take."
     (when (or (zerop expression-total) (zerop branch-total))
       (format *error-output*
               "~&No coverage was recorded for src/; instrumentation did not take.~%")
-      (uiop:quit 1))
+      (host-kit:quit 1))
     (format t
             "~&~%Coverage (src/):~%  expression ~,1F% (~D/~D)~%  branch     ~,1F% (~D/~D)~%"
             expression-percentage
@@ -134,7 +152,7 @@ build go on reusing its prebuilt store paths."
   (asdf:initialize-output-translations
    `(:output-translations
      (,root (,(merge-pathnames "cl-vcs-kit-coverage-fasl/"
-                               (uiop:temporary-directory))
+                               (host-kit:temporary-directory))
              :implementation))
      :inherit-configuration)))
 
@@ -143,13 +161,14 @@ build go on reusing its prebuilt store paths."
 CL-WEAVE:*DEFAULT-TIMEOUT-MS* is NIL by default, so without this a deadlocked
 test hangs until the flake's whole-suite timeout kills the process, which names
 no test. A per-test bound fails the one test that hung and says which."
-  (setf (symbol-value (uiop:find-symbol* '#:*default-timeout-ms* :cl-weave))
-        milliseconds))
+  (let ((symbol (find-symbol "*DEFAULT-TIMEOUT-MS*" :cl-weave)))
+    (unless symbol (error "CL-WEAVE timeout variable is unavailable."))
+    (setf (symbol-value symbol) milliseconds)))
 
 (let ((root (script-directory)))
   (configure-local-source-registry root)
   (asdf:load-system "cl-weave")
-  (uiop:symbol-call :cl-weave :require-coverage-support)
+  (call-exported-function :cl-weave "REQUIRE-COVERAGE-SUPPORT")
   (set-per-test-timeout 30000)
   (redirect-this-systems-fasls root)
   ;; Instrument, force a recompile of this library alone so the instrumentation
@@ -159,9 +178,9 @@ no test. A per-test bound fails the one test that hung and says which."
   (asdf:load-system "cl-vcs-kit" :force t)
   (set-coverage-instrumentation 0)
   (asdf:load-system "cl-vcs-kit/test")
-  (uiop:symbol-call :vcs-kit/test
-                    :run-tests
+  (call-exported-function :vcs-kit/test
+                    "RUN-TESTS"
                     :coverage t
                     :coverage-report-directory (coverage-report-directory))
   (enforce-coverage-floors root)
-  (uiop:quit 0))
+  (host-kit:quit 0))

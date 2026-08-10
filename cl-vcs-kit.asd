@@ -20,7 +20,7 @@ signaled as conditions that retain the underlying command result."
   :homepage "https://github.com/nerima-lisp/cl-vcs-kit"
   :bug-tracker "https://github.com/nerima-lisp/cl-vcs-kit/issues"
   :source-control (:git "https://github.com/nerima-lisp/cl-vcs-kit.git")
-  :depends-on ("cl-process-kit")
+  :depends-on ("cl-process-kit" "cl-host-kit" "cl-log-kit")
   :pathname "src"
   :serial t
   :components ((:file "package")
@@ -30,6 +30,7 @@ signaled as conditions that retain the underlying command result."
                (:file "conditions-ghq")
                (:file "conditions-vcs")
                (:file "execution")
+               (:file "execution-async")
                (:file "async")
                (:file "process")
                (:file "ghq")
@@ -38,17 +39,21 @@ signaled as conditions that retain the underlying command result."
                (:file "parse-status")
                (:file "parse-diff")
                (:file "ghq-structured")
+               (:file "vcs-backend-definition")
                (:file "vcs-backend-core")
                (:file "vcs-backend-data")
                (:file "vcs-backend-repository")
+               (:file "git-operations")
+               (:file "git-operations-generated")
                (:file "vcs-commands-core")
+               (:file "vcs-commands-version")
                (:file "vcs-commands-operation")
                (:file "vcs-commands-standalone")
                (:file "vcs-observations-core")
+               (:file "vcs-observations-remotes")
                (:file "vcs-observations-refs")
                (:file "vcs-observations-worktree")
                (:file "vcs-observations-submodule")
-               (:file "git-operations")
                (:file "ghq-operations-core")
                (:file "ghq-operations-repository")
                (:file "ghq-operations-management")
@@ -72,7 +77,7 @@ signaled as conditions that retain the underlying command result."
   :homepage "https://github.com/nerima-lisp/cl-vcs-kit"
   :bug-tracker "https://github.com/nerima-lisp/cl-vcs-kit/issues"
   :source-control (:git "https://github.com/nerima-lisp/cl-vcs-kit.git")
-  :depends-on ("cl-vcs-kit" "cl-weave")
+  :depends-on ("cl-vcs-kit" "cl-weave" "cl-log-kit")
   :pathname "t"
   :serial t
   :components ((:file "package")
@@ -86,11 +91,18 @@ signaled as conditions that retain the underlying command result."
                (:file "ghq-test")
                (:file "ghq-operation-test")
                (:file "advanced-api-test")
+               (:file "operation-contract-test")
+               (:file "backend-detection-test")
                (:file "repository-test")
+               (:file "repository-query-test")
+               (:file "repository-worktree-test")
                (:file "repository-remote-test")
+               (:file "git-operation-family-test")
+               (:file "backend-operation-property-test")
+               (:file "observation-operation-test")
                (:file "operation-test")
                (:file "operation-execution-test")))
 
 (defmethod perform ((operation test-op) (system (eql (find-system "cl-vcs-kit/test"))))
   (declare (ignore operation system))
-  (uiop:symbol-call :vcs-kit/test :run-tests))
+  (funcall (symbol-function (find-symbol "RUN-TESTS" :vcs-kit/test))))

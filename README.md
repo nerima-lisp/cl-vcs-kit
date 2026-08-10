@@ -11,9 +11,11 @@ escaped; output comes back as structured results instead of strings the caller
 re-parses; and failures signal conditions that keep the underlying command
 result attached. A backend-neutral layer maps a common operation vocabulary
 onto Git, Mercurial, Subversion, Bazaar, Fossil, Darcs, and Pijul without
-pretending they share semantics. Its only runtime dependency is the org's
-[`cl-process-kit`](https://github.com/nerima-lisp/cl-process-kit); protocol
-parsers stay local to the formats they implement.
+pretending they share semantics. Its runtime dependencies are the org's
+[`cl-process-kit`](https://github.com/nerima-lisp/cl-process-kit),
+[`cl-host-kit`](https://github.com/nerima-lisp/cl-host-kit), and
+[`cl-log-kit`](https://github.com/nerima-lisp/cl-log-kit); protocol parsers stay
+local to the formats they implement.
 
 Full documentation is published at <https://nerima-lisp.github.io/cl-vcs-kit/>.
 The source for that site lives in [docs/src/](docs/src/).
@@ -44,7 +46,7 @@ somewhere inside a working tree.
 ```nix
 # flake.nix
 inputs.cl-vcs-kit = {
-  url = "github:nerima-lisp/cl-vcs-kit/v0.1.0";
+  url = "github:nerima-lisp/cl-vcs-kit/v0.1.1";
   inputs.nixpkgs.follows = "nixpkgs";
 };
 ```
@@ -54,8 +56,11 @@ following the default branch.
 
 For a local checkout, make it and its dependencies visible to the Common Lisp
 source registry, then `(asdf:load-system "cl-vcs-kit")`. The runtime
-dependency is `cl-process-kit`; the test system adds `cl-weave`. The flake also
-supplies the native `git` and `ghq` executables the development checks need.
+dependencies are `cl-process-kit`, `cl-host-kit`, and `cl-log-kit`; the test
+system adds `cl-weave`. Host-facing pathname, temporary-directory, and
+command-line operations are provided by `cl-host-kit`, keeping the library's
+runtime surface independent of ASDF's `uiop` utilities. The flake also supplies
+the native `git` and `ghq` executables the development checks need.
 
 ## Documentation
 
@@ -86,12 +91,16 @@ nix fmt              # format Nix sources (treefmt)
 Tests live in `t/` and run under
 [cl-weave](https://github.com/nerima-lisp/cl-weave), the org's test framework.
 The suite creates temporary repositories for Git integration coverage, and
-skips the GHQ executable test when GHQ is not installed. It also runs from a
-raw checkout without Nix:
+skips the GHQ executable test when GHQ is not installed. The reproducible
+checkout command is:
 
 ```sh
-sbcl --script run-tests.lisp
+nix develop --command sbcl --script run-tests.lisp
 ```
+
+A direct `sbcl --script run-tests.lisp` invocation also works when the runtime
+dependencies and `cl-weave` are already installed and registered with ASDF; it
+is not a dependency installation step.
 
 Coverage is always measured and gated by the suite itself; pass
 `--coverage-report-directory /tmp/cl-vcs-kit-coverage/` to also write an HTML

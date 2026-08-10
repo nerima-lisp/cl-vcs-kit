@@ -14,7 +14,8 @@
               "src/package-exports-git.lisp"
               "src/package-exports-vcs.lisp"
               "src/package-exports-ghq.lisp"
-              "src/vcs-backend-data.lisp"))))
+              "src/vcs-backend-data.lisp"
+              "src/types.lisp"))))
 
 (defun run-tests (&key coverage coverage-report-directory)
   (when (and coverage (not (coverage-support-available-p)))

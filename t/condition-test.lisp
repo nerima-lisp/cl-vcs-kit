@@ -4,6 +4,11 @@
   (princ-to-string condition))
 
 (describe "typed failure conditions"
+  (it "reports the base VCS error"
+    (expect (%condition-report-string (make-condition 'vcs-error))
+            :to-equal
+            "VCS operation failed"))
+
   (it "preserves Git failure context"
     (let* ((result (%fake-result :exit-code 7))
            (condition
@@ -50,7 +55,20 @@
                                      :repository nil
                                      :command "status"
                                      :arguments nil)
-                     "Git could not be launched: status")))
+                     "Git could not be launched: status")
+               (list (make-condition 'git-io-error
+                                     :repository nil
+                                     :command "show"
+                                     :arguments '("HEAD")
+                                     :stream :stdout)
+                     "Git command I/O failed: show HEAD")
+               (list (make-condition 'git-launch-error
+                                     :repository nil
+                                     :command "status"
+                                     :arguments nil
+                                     :directory "repo"
+                                     :cause :cause)
+                     "Git could not be launched: status in repo: CAUSE")))
       (expect (%condition-report-string (first entry))
               :to-equal
               (second entry))))
@@ -152,6 +170,10 @@
                                        :arguments '("--short")
                                        :exit-code 2)
                        "VCS command failed: status --short (exit 2)")
+                 (list (make-condition 'vcs-command-exit-error
+                                       :command "status"
+                                       :arguments nil)
+                       "VCS command failed: status (exit NIL)")
                  (list (make-condition 'vcs-command-timeout-error
                                        :command "fetch"
                                        :arguments '("origin"))
@@ -177,6 +199,9 @@
                                        :designator :missing
                                        :known-backends '(:git :mercurial))
                        "Unknown VCS backend :MISSING (known backends: GIT, MERCURIAL)")
+                 (list (make-condition 'vcs-unknown-backend-error
+                                       :designator :missing)
+                       "Unknown VCS backend :MISSING (known backends: )")
                  (list (make-condition 'vcs-backend-registration-error
                                        :backend backend
                                        :designator :git
@@ -185,10 +210,16 @@
                  (list (make-condition 'vcs-backend-detection-error
                                        :directory "repo")
                        "Could not detect a VCS backend in repo")
+                 (list (make-condition 'vcs-backend-detection-error)
+                       "Could not detect a VCS backend in NIL")
                  (list (make-condition 'vcs-unsupported-operation-error
                                        :backend backend
                                        :operation :commit
                                        :capabilities '(:status))
+                       "VCS backend GIT does not support operation COMMIT")
+                 (list (make-condition 'vcs-unsupported-operation-error
+                                       :backend backend
+                                       :operation :commit)
                        "VCS backend GIT does not support operation COMMIT")))
         (expect (%condition-report-string (first entry))
                 :to-equal

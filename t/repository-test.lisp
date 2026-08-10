@@ -1,6 +1,48 @@
 (in-package #:vcs-kit/test)
 
 (describe "Git repository operations"
+  (it "constructs repository initialization and clone options"
+    (let ((directory (%temporary-test-directory))
+          (calls nil))
+      (unwind-protect
+           (with-replaced-function
+               (vcs-kit::run-git/checked
+                (lambda (repository command arguments &rest options)
+                  (push (list repository command arguments options) calls)
+                  (%fake-result)))
+             (git-init directory
+                       :bare t
+                       :initial-branch "main"
+                       :template "/tmp/template")
+             (git-clone "source" directory
+                        :bare t
+                        :branch "main"
+                        :depth 1
+                        :recursive t
+                        :no-checkout t
+                        :arguments '("--quiet")))
+        (host-kit:delete-directory-tree directory
+                                     :validate t
+                                     :if-does-not-exist :ignore))
+      (let ((init (second calls))
+            (clone (first calls)))
+        (expect (second init) :to-equal "init")
+        (expect (third init)
+                :to-equal '("--bare" "--initial-branch" "main"
+                            "--template" "/tmp/template"))
+        (expect (second clone) :to-equal "clone")
+        (expect (third clone)
+                :to-equal (list "--bare" "--branch" "main" "--depth" "1"
+                                "--recurse-submodules" "--no-checkout" "--quiet"
+                                "source" (namestring directory))))))
+
+  (it "resolves repository-relative and absolute Git paths"
+    (let ((repository (make-repository "/tmp/project/")))
+      (expect (vcs-kit::%resolve-git-path repository "../shared/.git")
+              :to-equal "/tmp/project/../shared/.git")
+      (expect (vcs-kit::%resolve-git-path repository "/var/lib/git/common")
+              :to-equal "/var/lib/git/common")))
+
   (it "discovers, stages, commits, and clones a repository"
     (%with-temporary-repository (repository)
       (let* ((directory (repository-directory repository))
@@ -13,7 +55,7 @@
         (expect (status-snapshot-branch-head (git-status repository))
                 :to-equal
                 "main")
-        (expect (repository-directory (discover-repository nested))
+        (expect (repository-directory (open-repository nested))
                 :to-equal
                 directory)
         (%write-test-file directory file-name
@@ -185,205 +227,5 @@
           (expect (vcs-unsupported-operation-error-operation condition)
                   :to-equal
                   :branches)))))
-
-  (it "parses worktree marker flags from porcelain output"
-    (let ((repository (make-vcs-repository (uiop:temporary-directory)
-                                           :backend :git)))
-      (with-replaced-function
-          (vcs-kit::%vcs-structured-run
-           (lambda (called-repository command arguments execution-options)
-             (declare (ignore called-repository arguments execution-options))
-             (expect command :to-equal "worktree")
-             (%fake-result
-              :stdout
-              (format nil
-                      "worktree main~%HEAD main-head~%branch refs/heads/main~%~%worktree locked~%HEAD locked-head~%branch refs/heads/topic~%locked reason~%~%worktree prunable~%HEAD prunable-head~%branch refs/heads/stale~%prunable reason~%~%worktree bare~%HEAD bare-head~%bare~%"))))
-        (let* ((worktrees (vcs-list-worktrees repository))
-               (main (first worktrees))
-               (locked (second worktrees))
-               (prunable (third worktrees))
-               (bare (fourth worktrees)))
-          (expect (length worktrees) :to-equal 4)
-          (expect (vcs-worktree-branch main) :to-equal "main")
-          (expect (vcs-worktree-locked-p main) :to-be nil)
-          (expect (vcs-worktree-locked-p locked) :to-be-truthy)
-          (expect (vcs-worktree-branch locked) :to-equal "topic")
-          (expect (vcs-worktree-prunable-p prunable) :to-be-truthy)
-          (expect (vcs-worktree-branch prunable) :to-equal "stale")
-          (expect (vcs-worktree-bare-p bare) :to-be-truthy)))))
-
-  (it "parses structured refs and rejects malformed records"
-    (let ((repository (make-vcs-repository (uiop:temporary-directory)
-                                           :backend :git))
-          (mode :valid))
-      (with-replaced-function
-          (vcs-kit::%vcs-structured-run
-           (lambda (called-repository command arguments execution-options)
-             (declare (ignore called-repository execution-options))
-             (cond
-               ((eq mode :malformed)
-                (%fake-result :stdout (format nil "malformed~%")))
-               ((eq mode :malformed-tag)
-                (%fake-result :stdout (format nil "malformed-tag~%")))
-               ((eq mode :malformed-divergence)
-                (if (string= command "rev-list")
-                    (%fake-result :stdout (format nil "not-a-count~%"))
-                    (%fake-result
-                     :stdout
-                     (format nil "*~Cmain~Corigin/main~%" #\Tab #\Tab))))
-               ((string= command "for-each-ref")
-                (if (member "refs/tags" arguments :test #'string=)
-                    (%fake-result
-                     :stdout
-                     (format nil
-                             "~%v1~Cv1-object~Ccommit~CLightweight~C~%v2~Cv2-object~Ctag~CAnnotated~CTagger~%"
-                             #\Tab #\Tab #\Tab #\Tab
-                             #\Tab #\Tab #\Tab #\Tab))
-                    (%fake-result
-                     :stdout
-                     (format nil "~%*~Cmain~Corigin/main~% ~Ctopic~C~%"
-                             #\Tab #\Tab #\Tab #\Tab))))
-               ((string= command "rev-list")
-                (%fake-result :stdout (format nil "2~C1~%" #\Tab)))
-               ((string= command "rev-parse")
-                (%fake-result :stdout (format nil "peeled-object~%")))
-               (t
-                (error "Unexpected fake structured command: ~A ~S"
-                       command arguments)))))
-        (let* ((branches (vcs-list-branches repository))
-               (main (find "main" branches
-                           :key #'vcs-branch-name
-                           :test #'string=))
-               (topic (find "topic" branches
-                            :key #'vcs-branch-name
-                            :test #'string=))
-               (tags (vcs-list-tags repository))
-               (lightweight (find "v1" tags
-                                  :key #'vcs-tag-name
-                                  :test #'string=))
-               (annotated (find "v2" tags
-                                :key #'vcs-tag-name
-                                :test #'string=)))
-          (expect (length branches) :to-equal 2)
-          (expect (vcs-branch-current-p main) :to-be-truthy)
-          (expect (vcs-branch-upstream main) :to-equal "origin/main")
-          (expect (vcs-branch-ahead main) :to-equal 2)
-          (expect (vcs-branch-behind main) :to-equal 1)
-          (expect (vcs-branch-upstream topic) :to-be nil)
-          (expect (vcs-branch-ahead topic) :to-be nil)
-          (expect (vcs-tag-target lightweight) :to-equal "v1-object")
-          (expect (vcs-tag-annotated-p lightweight) :to-be nil)
-          (expect (vcs-tag-target annotated) :to-equal "peeled-object")
-          (expect (vcs-tag-annotated-p annotated) :to-be-truthy)
-          (expect (vcs-tag-tagger annotated) :to-equal "Tagger"))
-        (setf mode :malformed)
-        (%expect-condition error
-          (vcs-list-branches repository))
-        (setf mode :malformed-divergence)
-        (%expect-condition error
-          (vcs-list-branches repository))
-        (setf mode :malformed-tag)
-        (%expect-condition error
-          (vcs-list-tags repository)))))
-
-  (it "projects unmerged status entries as conflicts"
-    (let ((repository (make-vcs-repository (uiop:temporary-directory)
-                                           :backend :git)))
-      (with-replaced-function
-          (vcs-kit::vcs-status-structured
-           (lambda (called-repository &rest arguments)
-             (declare (ignore called-repository arguments))
-             (vcs-kit::%make-vcs-status-snapshot
-              :entries
-              (list
-               (vcs-kit::%make-vcs-status-entry
-                :kind :ordinary
-                :path "clean.txt")
-               (vcs-kit::%make-vcs-status-entry
-                :kind :unmerged
-                :path "conflict.txt"
-                :conflict-object-1 "base-object"
-                :conflict-object-2 "ours-object"
-                :conflict-object-3 "theirs-object")))))
-        (let ((conflicts (vcs-list-conflicts repository)))
-          (expect (length conflicts) :to-equal 1)
-          (let ((conflict (first conflicts)))
-            (expect (vcs-conflict-path conflict) :to-equal "conflict.txt")
-            (expect (vcs-conflict-base conflict) :to-equal "base-object")
-            (expect (vcs-conflict-ours conflict) :to-equal "ours-object")
-            (expect (vcs-conflict-theirs conflict)
-                    :to-equal
-                    "theirs-object"))))))
-
-  (it "rejects mismatched structured diff streams"
-    (let ((repository (make-vcs-repository (uiop:temporary-directory)
-                                           :backend :git)))
-      (with-replaced-function
-          (vcs-kit::%vcs-structured-run
-           (lambda (called-repository command arguments execution-options)
-             (declare (ignore called-repository command execution-options))
-             (if (member "--name-status" arguments :test #'string=)
-                 (%fake-result
-                  :stdout
-                  (format nil "M~Cfile.txt~C" #\Null #\Null))
-                 (%fake-result :stdout ""))))
-        (%expect-condition error
-          (vcs-diff-entries repository)))))
-
-  (it "handles optional Git queries and rejects malformed history"
-    (let ((repository (make-vcs-repository (uiop:temporary-directory)
-                                           :backend :git)))
-      (with-replaced-function
-          (vcs-kit::%vcs-structured-run
-           (lambda (called-repository command arguments execution-options)
-             (declare (ignore called-repository arguments execution-options))
-             (cond
-               ((string= command "remote")
-                (%fake-result
-                 :stdout
-                 (format nil
-                         "~%not-a-remote~%origin~Chttps://example.invalid/repo (fetch)~%"
-                         #\Tab)))
-               ((string= command "config")
-                (error 'vcs-command-exit-error :exit-code 1))
-               (t
-                (error "Unexpected fake structured command: ~A" command)))))
-        (let ((remote (first (vcs-list-remotes repository))))
-          (expect (vcs-remote-name remote) :to-equal "origin")
-          (expect (vcs-remote-fetch-url remote)
-                  :to-equal
-                  "https://example.invalid/repo")
-          (expect (vcs-remote-push-url remote) :to-be nil)
-          (expect (vcs-remote-fetch-refspecs remote) :to-equal nil)
-          (expect (vcs-remote-push-refspecs remote) :to-equal nil)))
-      (with-replaced-function
-          (vcs-kit::%vcs-structured-run
-           (lambda (called-repository command arguments execution-options)
-             (declare (ignore called-repository command arguments
-                              execution-options))
-             (error 'vcs-command-exit-error :exit-code 2)))
-        (let ((condition
-                (%expect-condition vcs-command-exit-error
-                  (vcs-list-remotes repository))))
-          (expect (vcs-command-exit-error-exit-code condition)
-                  :to-equal
-                  2)))
-      (with-replaced-function
-          (vcs-kit::%vcs-structured-run
-           (lambda (called-repository command arguments execution-options)
-             (declare (ignore called-repository arguments execution-options))
-             (cond
-               ((string= command "log")
-                (%fake-result :stdout (%join-nul "only")))
-               ((string= command "stash")
-                (%fake-result
-                 :stdout
-                 (format nil "~%stash@{0}~Cmessage~%" #\Null)))
-               (t
-                (error "Unexpected fake structured command: ~A" command)))))
-        (%expect-condition error
-          (vcs-list-commits repository))
-        (%expect-condition error
-          (vcs-list-stashes repository)))))
 
 )

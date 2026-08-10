@@ -14,7 +14,9 @@
    repository-default-timeout
    repository-environment
    open-repository
-   discover-repository
+
+   ;; Structured operation logging.
+   *vcs-logger*
 
    ;; Direct process-kit results.
    process-result

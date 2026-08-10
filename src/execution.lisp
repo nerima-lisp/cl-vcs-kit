@@ -4,6 +4,14 @@
 (defparameter +unspecified-option+ (gensym "UNSPECIFIED-"))
 (defparameter +default-vcs-timeout+ 30d0)
 
+(defparameter *vcs-logger*
+  (log-kit:make-logger :name "vcs-kit"
+                       :handler (log-kit:make-null-handler))
+  "Logger used by process-backed VCS operations.
+
+Bind this variable to a LOG-KIT logger to receive structured operation events;
+the default is deliberately silent for library callers.")
+
 (defun %argument-string (argument &optional position)
   (unless argument
     (error 'vcs-argument-error
@@ -146,6 +154,36 @@
      :external-format external-format
      :decoding-error-policy decoding-error-policy)))
 
+(defun %vcs-process-options (&key
+                               (input +unspecified-option+)
+                               timeout
+                               (max-output-characters +unspecified-option+)
+                               cancellation-token
+                               (grace-period +unspecified-option+)
+                               (drain-timeout-seconds +unspecified-option+)
+                               event-callback)
+  "Build the process-kit options shared by sync and async execution.
+
+The sentinel values are kept at this boundary so callers can distinguish an
+omitted option from an explicit NIL.  This function is deliberately data-only;
+the process invocation remains in the synchronous and asynchronous runners."
+  (let ((options (list :timeout timeout
+                       :on-timeout :return
+                       :on-cancel :return)))
+    (flet ((add-option (key value)
+             (unless (eq value +unspecified-option+)
+               (setf options (list* key value options))))
+           (add-present-option (key value)
+             (when value
+               (setf options (list* key value options)))))
+      (add-option :input input)
+      (add-option :max-output-characters max-output-characters)
+      (add-present-option :cancellation-token cancellation-token)
+      (add-option :grace-period grace-period)
+      (add-option :drain-timeout-seconds drain-timeout-seconds)
+      (add-present-option :event-callback event-callback))
+    options))
+
 (defun %run-vcs-command (executable arguments
                          &key
                            (input +unspecified-option+)
@@ -162,6 +200,11 @@
                            (result-type :string)
                            (external-format :utf-8)
                            (decoding-error-policy :replace))
+  (log-kit:log-info *vcs-logger* "run vcs command"
+                    :executable executable
+                    :arguments arguments
+                    :directory command-directory
+                    :timeout timeout)
   (let ((command (%make-vcs-command executable
                                      arguments
                                      :directory command-directory
@@ -173,73 +216,24 @@
                                      :external-format external-format
                                      :decoding-error-policy
                                      decoding-error-policy))
-        (options (list :timeout timeout
-                       :on-timeout :return
-                       :on-cancel :return)))
-    (macrolet ((add-option (key value)
-                 `(unless (eq ,value +unspecified-option+)
-                    (setf options (list* ,key ,value options))))
-               (add-present-option (key value)
-                 `(when ,value
-                    (setf options (list* ,key ,value options)))))
-      (add-option :input input)
-      (add-option :max-output-characters max-output-characters)
-      (add-present-option :cancellation-token cancellation-token)
-      (add-option :grace-period grace-period)
-      (add-option :drain-timeout-seconds drain-timeout-seconds))
+        (options (%vcs-process-options
+                  :input input
+                  :timeout timeout
+                  :max-output-characters max-output-characters
+                  :cancellation-token cancellation-token
+                  :grace-period grace-period
+                  :drain-timeout-seconds drain-timeout-seconds)))
     (apply #'process-kit:run-command command options)))
-
-(defun %run-vcs-command-async (executable arguments
-                               &key
-                                 (input +unspecified-option+)
-                                 (timeout +default-vcs-timeout+)
-                                 (max-output-characters +unspecified-option+)
-                                 (grace-period +unspecified-option+)
-                                 (drain-timeout-seconds +unspecified-option+)
-                                 command-directory
-                                 (environment :inherit)
-                                 (environment-update nil)
-                                 (output :capture)
-                                 (error-output :capture)
-                                 (result-type :string)
-                                 (external-format :utf-8)
-                                 (decoding-error-policy :replace)
-                                 event-callback)
-  "Start EXECUTABLE asynchronously and return process-kit:PROCESS-TASK.
-
-Cancellation is owned by the returned task.  This mirrors
-PROCESS-KIT:RUN-COMMAND-ASYNC directly instead of manufacturing a second
-token or result wrapper."
-  (let ((command (%make-vcs-command executable
-                                     arguments
-                                     :directory command-directory
-                                     :environment environment
-                                     :environment-update environment-update
-                                     :output output
-                                     :error-output error-output
-                                     :result-type result-type
-                                     :external-format external-format
-                                     :decoding-error-policy
-                                     decoding-error-policy))
-        (options (list :timeout timeout
-                       :on-timeout :return
-                       :on-cancel :return)))
-    (macrolet ((add-option (key value)
-                 `(unless (eq ,value +unspecified-option+)
-                    (setf options (list* ,key ,value options))))
-               (add-present-option (key value)
-                 `(when ,value
-                    (setf options (list* ,key ,value options)))))
-      (add-option :input input)
-      (add-option :max-output-characters max-output-characters)
-      (add-option :grace-period grace-period)
-      (add-option :drain-timeout-seconds drain-timeout-seconds)
-      (add-present-option :event-callback event-callback))
-    (apply #'process-kit:run-command-async command options)))
 
 (defun %result-output (result)
   (string-trim '(#\Space #\Tab #\Newline #\Return #\Null)
                (or (process-result-stdout result) "")))
+
+(defun %dispatch-vcs-result (thunk on-success on-failure)
+  (handler-case
+      (funcall on-success (funcall thunk))
+    (vcs-error (condition)
+      (funcall on-failure condition))))
 
 (defmacro with-vcs-result ((result on-success on-failure) form)
   "Run FORM and dispatch its value or a VCS-ERROR to a callback.
@@ -247,8 +241,9 @@ token or result wrapper."
 This is deliberately synchronous CPS: callers can keep control flow in
 callbacks while the process implementation remains replaceable by the
 asynchronous process-kit API."
-  `(handler-case
-       (let ((,result ,form))
-         (funcall ,on-success ,result))
-     (vcs-error (condition)
+  `(%dispatch-vcs-result
+     (lambda () ,form)
+     (lambda (,result)
+       (funcall ,on-success ,result))
+     (lambda (condition)
        (funcall ,on-failure condition))))

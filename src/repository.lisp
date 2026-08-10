@@ -1,11 +1,11 @@
 (in-package #:vcs-kit)
 
 (defun %directory-string (directory)
-  (namestring (uiop:ensure-directory-pathname directory)))
+  (namestring (host-kit:ensure-directory-pathname directory)))
 
 (defun %resolve-git-path (repository value)
   (let ((path (pathname value)))
-    (if (uiop:absolute-pathname-p path)
+    (if (host-kit:absolute-pathname-p path)
         (namestring path)
         (namestring
          (merge-pathnames path
@@ -77,13 +77,6 @@ decide whether DIRECTORY belongs to a repository."
                      :git-directory git-directory
                      :common-directory common-directory
                      :bare-p bare-p)))
-
-(defun discover-repository (directory &rest options)
-  "Discover the repository containing DIRECTORY.
-
-This is an alias-shaped entry point for callers that prefer the discovery
-verb over OPEN-REPOSITORY."
-  (apply #'open-repository directory options))
 
 (defun git-init (directory &key
                            bare
@@ -185,7 +178,7 @@ the convenience keywords."
                      :environment-update environment-update
                      :directory
                      (namestring
-                      (uiop:pathname-parent-directory-pathname
+                      (host-kit:parent-directory-pathname
                        (pathname target)))
                      :input input
                      :output output

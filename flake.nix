@@ -42,7 +42,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     paredit-cli = {
-      url = "github:takeokunn/paredit-cli/v1.6.0";
+      url = "github:nerima-lisp/paredit-cli/v1.6.0";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     treefmt-nix = {
@@ -156,7 +156,11 @@
             lispCheckDependencies = [ clWeave ];
           };
         in
-        [ clProcessKit ];
+        [
+          clProcessKit
+          clHostKit
+          clLogKit
+        ];
 
       lispCheckDependencies = ctx: [
         (ctx.cl.lispDerivation {

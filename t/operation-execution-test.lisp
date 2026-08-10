@@ -1,9 +1,34 @@
 (in-package #:vcs-kit/test)
 
+(defparameter *generated-vcs-operations*
+  '(vcs-status vcs-diff vcs-log vcs-show vcs-cat vcs-add vcs-remove vcs-move
+    vcs-commit vcs-branch vcs-switch vcs-checkout vcs-tag vcs-fetch vcs-pull
+    vcs-push vcs-merge vcs-rebase vcs-reset vcs-revert vcs-stash vcs-remote
+    vcs-update vcs-sync vcs-archive vcs-annotate vcs-blame vcs-resolve
+    vcs-clean vcs-lock vcs-unlock vcs-config vcs-help vcs-worktree
+    vcs-submodule vcs-bundle vcs-maintenance vcs-verify))
+
 (describe "VCS command execution and continuations"
+  (it "dispatches every generated VCS operation through one table-driven harness"
+    (let ((repository (make-vcs-repository (host-kit:temporary-directory)
+                                            :backend :git))
+          (calls nil))
+      (with-replaced-function
+          (vcs-kit::run-vcs/checked
+           (lambda (called-repository command arguments &rest options)
+             (push (list called-repository command arguments options) calls)
+             (%fake-result)))
+        (dolist (name *generated-vcs-operations*)
+          (expect (fboundp name) :to-be-truthy)
+          (expect (process-success-p
+                   (funcall name repository "fixture"
+                            :execution-options '(:timeout nil)))
+                  :to-be-truthy)))
+      (expect (length calls) :to-equal (length *generated-vcs-operations*))))
+
   (it "runs direct argv and preserves typed failures"
     (let ((repository
-            (make-vcs-repository (uiop:temporary-directory)
+            (make-vcs-repository (host-kit:temporary-directory)
                                  :backend :git
                                  :executable (%program-path "echo"))))
       (let ((result (run-vcs repository "status" '("file"))))
@@ -38,6 +63,21 @@
                        :decoding-error-policy :error))))
       (expect (vcs-command-io-error-stream condition) :to-be :stdout)
       (expect (vcs-command-error-directory condition) :to-be nil)))
+
+  (it "maps asynchronous subprocess I/O failures to a typed condition"
+    (with-replaced-function
+        (vcs-kit::%run-vcs-command-async
+         (lambda (&rest arguments)
+           (declare (ignore arguments))
+           (error 'process-kit:process-io-error
+                  :stream :stderr
+                  :cause :test-cause)))
+      (let ((condition
+              (%expect-condition vcs-command-io-error
+                (run-vcs-async nil "status" nil
+                               :executable (%program-path "echo")))))
+        (expect (vcs-command-io-error-stream condition) :to-be :stderr)
+        (expect (vcs-command-error-directory condition) :to-be nil))))
 
   (it "maps timeout and cancellation results to typed conditions"
     (with-replaced-function
@@ -74,7 +114,7 @@
                 :to-be nil))))
 
   (it "separates normalized arguments from execution options"
-    (let ((repository (make-vcs-repository (uiop:temporary-directory)
+    (let ((repository (make-vcs-repository (host-kit:temporary-directory)
                                             :backend :git))
           (call nil))
       (with-replaced-function
@@ -117,7 +157,7 @@
                     :execution-options '(:timeout . 1)))))
 
   (it "rejects malformed and parser-owned structured Git options"
-    (let ((repository (make-vcs-repository (uiop:temporary-directory)
+    (let ((repository (make-vcs-repository (host-kit:temporary-directory)
                                             :backend :git)))
       (%expect-condition vcs-argument-error
         (git-status repository
@@ -138,7 +178,7 @@
   (it "dispatches generic success and failure continuations"
     (let ((success nil)
           (failure nil)
-          (repository (make-vcs-repository (uiop:temporary-directory)
+          (repository (make-vcs-repository (host-kit:temporary-directory)
                                             :backend :git
                                             :executable (%program-path "echo"))))
       (run-vcs/k repository "status" '("file")
@@ -183,9 +223,60 @@
                        :to-equal
                        (format nil "clone source ~A~%"
                                (namestring clone-target)))))
-        (uiop:delete-directory-tree parent
+        (host-kit:delete-directory-tree parent
                                      :validate t
                                      :if-does-not-exist :ignore))))
+
+  (it "forwards standalone execution options through the shared runner"
+    (let* ((calls nil)
+           (parent (%temporary-test-directory))
+           (clone-target (merge-pathnames "cloned/" parent)))
+      (unwind-protect
+           (progn
+             (with-replaced-function
+                 (vcs-kit::run-vcs/checked
+                  (lambda (repository command arguments &rest options)
+                    (push (list repository command arguments options) calls)
+                    (%fake-result)))
+               (vcs-init (merge-pathnames "initialized/" parent)
+                         :arguments '("--bare")
+                         :executable "/custom/vcs"
+                         :timeout 3
+                         :environment '(("MODE" . "test"))
+                         :environment-update '(("TRACE" . "1"))
+                         :input "input"
+                         :output :string
+                         :error-output :string
+                         :result-type :string
+                         :external-format :utf-8
+                         :max-output-characters 64
+                         :cancellation-token :token
+                         :grace-period 1
+                         :drain-timeout-seconds 2
+                         :decoding-error-policy :error)
+               (vcs-clone "source" clone-target
+                          :arguments '("--mirror")
+                          :timeout nil))
+             (expect (length calls) :to-equal 2)
+             (expect (second (first calls)) :to-equal "clone")
+             (expect (third (first calls))
+                     :to-equal (list "--mirror" "source"
+                                     (namestring clone-target))))
+        (host-kit:delete-directory-tree parent
+                                    :validate t
+                                    :if-does-not-exist :ignore))))
+
+  (it "rejects malformed standalone operation inputs"
+    (expect (%expect-condition error
+              (vcs-init nil))
+            :to-be-truthy)
+    (expect (%expect-condition type-error
+              (vcs-clone nil (host-kit:temporary-directory)))
+            :to-be-truthy)
+    (expect (%expect-condition type-error
+              (vcs-init (host-kit:temporary-directory)
+                        :arguments '("--valid" . "dotted")))
+            :to-be-truthy))
 
   (it "signals unsupported normalized operations"
     (let ((backend
@@ -197,7 +288,7 @@
            (progn
              (register-vcs-backend backend)
              (let* ((repository
-                      (make-vcs-repository (uiop:temporary-directory)
+                      (make-vcs-repository (host-kit:temporary-directory)
                                            :backend :minimal))
                     (condition
                       (%expect-condition vcs-unsupported-operation-error

@@ -9,7 +9,9 @@
    #:it-property
    #:it-skip-if
    #:gen-list
+   #:gen-map
    #:gen-string
+   #:gen-tuple
    #:with-continuation-result
    #:with-replaced-function
    #:coverage-support-available-p
