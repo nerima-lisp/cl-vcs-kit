@@ -126,7 +126,7 @@
             (make-vcs-backend
              :name :echo
              :aliases '("echo-vcs" echo-short)
-             :executable "/bin/echo"
+             :executable (%program-path "echo")
              :markers (list (pathname ".echo-vcs"))
              :commands (list (list :status "show-status" "--raw")
                              (list :version "version")
@@ -147,7 +147,7 @@
                     (result (vcs-status repository "item")))
                (expect (process-success-p result) :to-be-truthy)
                (expect (process-result-program result)
-                       :to-equal "/bin/echo")
+                       :to-equal (%program-path "echo"))
                (expect (process-result-stdout result)
                        :to-equal (format nil "show-status --raw item~%")))
              (expect (vcs-operation-command backend :version)
@@ -164,7 +164,7 @@
     (let ((backend
             (make-vcs-backend
              :name :capability-echo
-             :executable "/bin/echo"
+             :executable (%program-path "echo")
              :capabilities '(:status)
              :structured-operations '(:status)
              :commands '((:status . "status")
@@ -293,7 +293,7 @@
           (backend
             (make-vcs-backend
              :name :marker-echo
-             :executable "/bin/echo"
+             :executable (%program-path "echo")
              :markers '(".marker-vcs")
              :commands '((:status . "status")))))
       (unwind-protect
@@ -317,14 +317,14 @@
                             parent
                             :candidates '(:marker-echo)
                             :validate-executable t
-                            :executable "/bin/echo")
+                            :executable (%program-path "echo"))
                            backend)
                        :to-be-truthy)
                (let ((repository
                        (discover-vcs-repository nested
                                                 :candidates '(:marker-echo)
                                                 :validate-executable t
-                                                :executable "/bin/echo")))
+                                                :executable (%program-path "echo"))))
                  (expect (vcs-repository-directory repository)
                          :to-equal (namestring
                                     (uiop:ensure-directory-pathname parent)))
@@ -371,7 +371,7 @@
   (it "dispatches the extended native operation families"
     (let ((repository (make-vcs-repository (uiop:temporary-directory)
                                            :backend :git
-                                           :executable "/bin/echo")))
+                                           :executable (%program-path "echo"))))
       (dolist (operation '((vcs-worktree . "worktree")
                            (vcs-submodule . "submodule")
                            (vcs-bundle . "bundle")

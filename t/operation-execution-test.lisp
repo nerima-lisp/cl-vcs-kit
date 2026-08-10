@@ -5,7 +5,7 @@
     (let ((repository
             (make-vcs-repository (uiop:temporary-directory)
                                  :backend :git
-                                 :executable "/bin/echo")))
+                                 :executable (%program-path "echo"))))
       (let ((result (run-vcs repository "status" '("file"))))
         (expect (process-success-p result) :to-be-truthy)
         (expect (process-result-stdout result)
@@ -50,7 +50,7 @@
       (let ((condition
               (%expect-condition vcs-command-timeout-error
                 (run-vcs nil "status" nil
-                         :executable "/bin/echo"
+                         :executable (%program-path "echo")
                          :check t))))
         (expect (vcs-command-error-command condition)
                 :to-equal "status")
@@ -66,7 +66,7 @@
       (let ((condition
               (%expect-condition vcs-command-cancelled-error
                 (run-vcs nil "status" nil
-                         :executable "/bin/echo"
+                         :executable (%program-path "echo")
                          :check t))))
         (expect (vcs-command-error-command condition)
                 :to-equal "status")
@@ -140,7 +140,7 @@
           (failure nil)
           (repository (make-vcs-repository (uiop:temporary-directory)
                                             :backend :git
-                                            :executable "/bin/echo")))
+                                            :executable (%program-path "echo"))))
       (run-vcs/k repository "status" '("file")
                  (lambda (result)
                    (setf success (process-result-stdout result)))
@@ -173,12 +173,12 @@
            (clone-target (merge-pathnames "cloned/" parent)))
       (unwind-protect
            (progn
-             (let ((result (vcs-init init-target :executable "/bin/echo")))
+             (let ((result (vcs-init init-target :executable (%program-path "echo"))))
                (expect (process-result-stdout result)
                        :to-equal
                        (format nil "init ~A~%" (namestring init-target))))
              (let ((result (vcs-clone "source" clone-target
-                                       :executable "/bin/echo")))
+                                       :executable (%program-path "echo"))))
                (expect (process-result-stdout result)
                        :to-equal
                        (format nil "clone source ~A~%"
@@ -191,7 +191,7 @@
     (let ((backend
             (make-vcs-backend
              :name :minimal
-             :executable "/bin/echo"
+             :executable (%program-path "echo")
              :commands '((:status . "status")))))
       (unwind-protect
            (progn

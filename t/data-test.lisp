@@ -7,7 +7,7 @@
                              :git-directory "git"
                              :common-directory "common"
                              :bare-p t
-                             :executable "/bin/echo"
+                             :executable (%program-path "echo")
                              :default-timeout 7d0
                              :environment nil))
           (inherited (make-repository (uiop:temporary-directory))))
@@ -15,7 +15,7 @@
       (expect (repository-git-directory repository) :to-equal "git")
       (expect (repository-common-directory repository) :to-equal "common")
       (expect (repository-bare-p repository) :to-be-truthy)
-      (expect (repository-executable repository) :to-equal "/bin/echo")
+      (expect (repository-executable repository) :to-equal (%program-path "echo"))
       (expect (repository-default-timeout repository) :to-equal 7d0)
       (expect (repository-environment repository) :to-be nil)
       (expect (repository-environment inherited) :to-be :inherit)))

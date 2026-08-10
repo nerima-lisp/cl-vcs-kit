@@ -5,9 +5,9 @@
     (let ((result (run-git nil
                            "status"
                            '("--porcelain" "path with spaces")
-                           :executable "/bin/echo")))
+                           :executable (%program-path "echo"))))
       (expect (process-success-p result) :to-be-truthy)
-      (expect (process-result-program result) :to-equal "/bin/echo")
+      (expect (process-result-program result) :to-equal (%program-path "echo"))
       (expect (process-result-arguments result)
               :to-equal
               '("status" "--porcelain" "path with spaces"))
@@ -39,30 +39,30 @@
   (it "rejects invalid command arguments with typed conditions"
     (let ((condition
             (%expect-condition vcs-argument-error
-              (run-git nil nil nil :executable "/bin/echo"))))
+              (run-git nil nil nil :executable (%program-path "echo")))))
       (expect (vcs-argument-error-position condition) :to-equal 0))
     (let ((condition
             (%expect-condition vcs-argument-error
               (run-git nil
                        "status"
                        (list (format nil "bad~Carg" #\Null))
-                       :executable "/bin/echo"))))
+                       :executable (%program-path "echo")))))
       (expect (vcs-argument-error-position condition) :to-equal 0))
     (let ((condition
             (%expect-condition vcs-argument-error
-              (run-git nil "status" (list nil) :executable "/bin/echo"))))
+              (run-git nil "status" (list nil) :executable (%program-path "echo")))))
       (expect (vcs-argument-error-position condition) :to-equal 0))
     (%expect-condition vcs-argument-error
       (run-git nil "status" nil :executable "")))
 
   (it "rejects invalid asynchronous command arguments before launch"
     (%expect-condition vcs-argument-error
-      (run-git-async nil nil nil :executable "/bin/echo"))
+      (run-git-async nil nil nil :executable (%program-path "echo")))
     (%expect-condition vcs-argument-error
       (run-git-async nil
                      "status"
                      (list (format nil "bad~Carg" #\Null))
-                     :executable "/bin/echo")))
+                     :executable (%program-path "echo"))))
 
   (it "maps synchronous launch failures to a typed condition"
     (let ((condition
@@ -95,7 +95,7 @@
                          :exit-code nil
                          :timed-out-p t)))
       (%expect-condition git-timeout-error
-        (run-git nil "status" nil :executable "/bin/echo"))))
+        (run-git nil "status" nil :executable (%program-path "echo")))))
 
   (it "maps cancellation results to a typed condition"
     (with-replaced-function
@@ -106,7 +106,7 @@
                          :exit-code nil
                          :cancelled-p t)))
       (%expect-condition git-cancelled-error
-        (run-git nil "status" nil :executable "/bin/echo"))))
+        (run-git nil "status" nil :executable (%program-path "echo")))))
 
   (it "supports cancellation tokens"
     (let ((token (make-vcs-cancellation-token)))
@@ -123,7 +123,7 @@
                      #'next
                      (lambda (condition)
                        (setf failure condition))
-                     :executable "/bin/echo")
+                     :executable (%program-path "echo"))
         (expect calledp :to-be-truthy)
         (expect failure :to-be nil)
         (expect (process-success-p result) :to-be-truthy))))

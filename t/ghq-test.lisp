@@ -27,7 +27,7 @@
                      :parallel t
                      :bare t
                      :partial "blobless"
-                     :executable "/bin/echo")))
+                     :executable (%program-path "echo"))))
       (expect (process-success-p result) :to-be-truthy)
       (expect (process-result-stdout result)
               :to-equal
@@ -44,7 +44,7 @@
              (%fake-result)))
         (expect (ghq-list
                  :environment-update '(("VCS_KIT_GHQ_ENV" . "updated-value"))
-                 :executable "/bin/echo")
+                 :executable (%program-path "echo"))
                 :to-be nil))
       (expect (getf captured-options :environment-update)
               :to-equal '(("VCS_KIT_GHQ_ENV" . "updated-value")))))
@@ -56,7 +56,7 @@
                       :unique t
                       :bare t
                       :arguments '("--custom" "owner/project")
-                      :executable "/bin/echo")
+                      :executable (%program-path "echo"))
             :to-equal
             '("list -p -e --vcs git --unique --bare --custom owner/project")))
 
@@ -66,7 +66,7 @@
          (lambda (&rest arguments)
            (declare (ignore arguments))
            (%fake-result :stdout (format nil "/one~%/two~%"))))
-      (expect (ghq-root :arguments '("/one" "/two") :executable "/bin/echo")
+      (expect (ghq-root :arguments '("/one" "/two") :executable (%program-path "echo"))
               :to-equal
               "/one"))
     (with-replaced-function
@@ -76,7 +76,7 @@
            (%fake-result :stdout (format nil "/full/path~%"))))
       (expect (ghq-path "owner/project"
                         :arguments '("/full/path")
-                        :executable "/bin/echo")
+                        :executable (%program-path "echo"))
               :to-equal
               "/full/path")))
 
@@ -95,13 +95,13 @@
   (it "rejects invalid command arguments with typed conditions"
     (let ((condition
             (%expect-condition vcs-argument-error
-              (run-ghq nil nil :executable "/bin/echo"))))
+              (run-ghq nil nil :executable (%program-path "echo")))))
       (expect (vcs-argument-error-position condition) :to-equal 0))
     (let ((condition
             (%expect-condition vcs-argument-error
               (run-ghq "version"
                        (list (format nil "bad~Carg" #\Null))
-                       :executable "/bin/echo"))))
+                       :executable (%program-path "echo")))))
       (expect (vcs-argument-error-position condition) :to-equal 0))
     (%expect-condition vcs-argument-error
       (ghq-list :output :stream))
@@ -110,11 +110,11 @@
 
   (it "rejects invalid asynchronous command arguments before launch"
     (%expect-condition vcs-argument-error
-      (run-ghq-async nil nil :executable "/bin/echo"))
+      (run-ghq-async nil nil :executable (%program-path "echo")))
     (%expect-condition vcs-argument-error
       (run-ghq-async "version"
                      (list (format nil "bad~Carg" #\Null))
-                     :executable "/bin/echo")))
+                     :executable (%program-path "echo"))))
 
   (it "keeps checked wrappers checked and supports GHQ CPS callbacks"
     (%expect-condition ghq-exit-error
@@ -128,7 +128,7 @@
                  nil
                  (lambda (result) (setf success result))
                  (lambda (condition) (setf failure condition))
-                 :executable "/bin/echo")
+                 :executable (%program-path "echo"))
       (expect (process-success-p success) :to-be-truthy)
       (expect failure :to-be nil)
       (setf success nil)
@@ -157,7 +157,7 @@
                          :exit-code nil
                          :timed-out-p t)))
       (%expect-condition ghq-timeout-error
-        (run-ghq "version" nil :executable "/bin/echo"))))
+        (run-ghq "version" nil :executable (%program-path "echo")))))
 
   (it "maps cancellation results to a typed GHQ condition"
     (with-replaced-function
@@ -168,7 +168,7 @@
                          :exit-code nil
                          :cancelled-p t)))
       (%expect-condition ghq-cancelled-error
-        (run-ghq "version" nil :executable "/bin/echo"))))
+        (run-ghq "version" nil :executable (%program-path "echo")))))
 
   (it "maps subprocess I/O failures to a typed GHQ condition"
     (let ((condition

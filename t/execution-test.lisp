@@ -83,14 +83,14 @@
                            '(("BAD" . "value") . "tail")
                            '("not-an-entry")))
       (%expect-condition vcs-argument-error
-        (vcs-kit::%make-vcs-command "/bin/echo"
+        (vcs-kit::%make-vcs-command (%program-path "echo")
                                     nil
                                     :environment-update updates)))
     (dolist (environment (list '(42)
                                 '(("BAD=KEY" . "value"))
                                 '(("DUP" . "one") ("DUP" . "two"))))
       (%expect-condition vcs-argument-error
-        (vcs-kit::%make-vcs-command "/bin/echo"
+        (vcs-kit::%make-vcs-command (%program-path "echo")
                                     nil
                                     :environment environment)))
     (%expect-condition vcs-argument-error

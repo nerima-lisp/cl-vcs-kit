@@ -6,7 +6,8 @@
                  nil
                  "--version"
                  nil
-                 :executable "/bin/echo"
+                 :executable (%program-path "echo")
+                 :environment-update '(("POSIXLY_CORRECT" . "1"))
                  :event-callback (lambda (event)
                                    (declare (ignore event))))))
       (expect (vcs-task-state task) :to-be-truthy)
@@ -29,11 +30,16 @@
       (expect (eq (cancel-vcs-task task) task) :to-be-truthy)))
 
   (it "starts Git, GHQ, and backend-neutral version tasks"
-    (dolist (task (list (git-version-async :executable "/bin/echo")
-                        (ghq-version-async :executable "/bin/echo")
+    (dolist (task (list (git-version-async
+                         :executable (%program-path "echo")
+                         :environment-update '(("POSIXLY_CORRECT" . "1")))
+                        (ghq-version-async
+                         :executable (%program-path "echo")
+                         :environment-update '(("POSIXLY_CORRECT" . "1")))
                         (vcs-version-async
                          :backend :git
-                         :executable "/bin/echo")))
+                         :executable (%program-path "echo")
+                         :environment-update '(("POSIXLY_CORRECT" . "1")))))
       (multiple-value-bind (result completed-p)
           (await-vcs-task task :timeout 5d0)
         (expect completed-p :to-be-truthy)
@@ -43,10 +49,15 @@
                 (format nil "--version~%")))))
 
   (it "runs synchronous Git, GHQ, and backend-neutral versions"
-    (dolist (result (list (git-version :executable "/bin/echo")
-                          (ghq-version :executable "/bin/echo")
+    (dolist (result (list (git-version
+                           :executable (%program-path "echo")
+                           :environment-update '(("POSIXLY_CORRECT" . "1")))
+                          (ghq-version
+                           :executable (%program-path "echo")
+                           :environment-update '(("POSIXLY_CORRECT" . "1")))
                           (vcs-version :backend :git
-                                       :executable "/bin/echo")))
+                                       :executable (%program-path "echo")
+                                       :environment-update '(("POSIXLY_CORRECT" . "1")))))
       (expect (process-success-p result) :to-be-truthy)
       (expect (process-result-stdout result)
               :to-equal
@@ -56,7 +67,7 @@
     (let* ((repository
              (make-vcs-repository (uiop:temporary-directory)
                                   :backend :git
-                                  :executable "/bin/echo"))
+                                  :executable (%program-path "echo")))
            (task (run-vcs-operation-async repository :status '("file"))))
       (multiple-value-bind (result completed-p)
           (await-vcs-task task :timeout 5d0)
