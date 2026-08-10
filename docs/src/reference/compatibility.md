@@ -1,5 +1,12 @@
 # Compatibility
 
+## Public API policy
+
+This release has no compatibility aliases or legacy entry points. Public names
+documented in the API reference are the supported contract; an old name is an
+unknown function rather than a deprecated forwarding adapter. Update callers
+to the current name when moving to this release.
+
 ## Built-in backend detection
 
 The built-in backend metadata uses these marker paths:
