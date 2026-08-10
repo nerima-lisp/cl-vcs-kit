@@ -87,7 +87,7 @@ Typed failures are grouped by family in [conditions](conditions.md).
 The Git wrappers are thin argv builders over `run-git/checked`. They exist so
 that a common call reads as a Lisp function rather than as a string of flags;
 anything they do not cover is still reachable through `run-git`. The groups
-below follow the export sections in `src/package.lisp`.
+below follow the export sections in `src/package-exports-git.lisp`.
 
 Repository creation is `git-init` and `git-clone`, alongside the
 `open-repository` handle above.
@@ -118,9 +118,9 @@ Plumbing and object/index commands cover `git-config`, `git-hash-object`,
 `git-index-pack`, `git-hook`, `git-replace`, `git-verify-commit`,
 `git-verify-tag`, and `git-commit-graph`.
 
-The full set is the `git-*` block of `src/package.lisp`, which covers the
-locally available Git command families; the names above are the ones a caller
-reaches for first rather than the whole list.
+The full set is the `git-*` block of `src/package-exports-git.lisp`, which
+covers the locally available Git command families; the names above are the
+ones a caller reaches for first rather than the whole list.
 
 ## Backend registry
 
@@ -160,7 +160,12 @@ Typed listings are `ghq-list-repositories` and
 `ghq-list-root-entries`, with `ghq-repository-entry` and `ghq-root-entry`
 accessors.
 
-The source of truth for the complete export list is
-[`src/package.lisp`](https://github.com/nerima-lisp/cl-vcs-kit/blob/main/src/package.lisp).
-The guides linked from this page document argument boundaries and return
-shapes for the most commonly used groups.
+The source of truth for the complete export list is the
+[`package-exports-core.lisp`](https://github.com/nerima-lisp/cl-vcs-kit/blob/main/src/package-exports-core.lisp),
+[`package-exports-git.lisp`](https://github.com/nerima-lisp/cl-vcs-kit/blob/main/src/package-exports-git.lisp),
+[`package-exports-vcs.lisp`](https://github.com/nerima-lisp/cl-vcs-kit/blob/main/src/package-exports-vcs.lisp),
+and
+[`package-exports-ghq.lisp`](https://github.com/nerima-lisp/cl-vcs-kit/blob/main/src/package-exports-ghq.lisp)
+files; `src/package.lisp` itself only defines the package and its
+`cl-process-kit` imports. The guides linked from this page document argument
+boundaries and return shapes for the most commonly used groups.

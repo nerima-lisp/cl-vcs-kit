@@ -46,7 +46,7 @@ somewhere inside a working tree.
 ```nix
 # flake.nix
 inputs.cl-vcs-kit = {
-  url = "github:nerima-lisp/cl-vcs-kit/v0.1.1";
+  url = "github:nerima-lisp/cl-vcs-kit/v0.2.0";
   inputs.nixpkgs.follows = "nixpkgs";
 };
 ```
