@@ -1,0 +1,69 @@
+# nerima-lisp standard .gitignore
+# Copy to <repo>/.gitignore and append repository-specific entries below the
+# marked section. Everything above the marker must stay identical across repos
+# so that "is this artifact ignored?" has the same answer everywhere.
+
+# --- Common Lisp build output ---
+*.fasl
+*.fas
+*.lib
+*.dfsl
+*.ufsl
+*.fsl
+
+# --- Nix ---
+/result
+/result-*
+/.direnv/
+
+# --- Test and coverage output ---
+/coverage/
+/coverage-report/
+/*-coverage-report/
+*.coverage
+coverage.dat
+/__snapshots__/
+/*-snapshots/
+
+# --- Local caches and scratch space ---
+/.cache/
+/.deps/
+/tmp/
+/.worktrees/
+/.paredit.cleanup/
+
+# --- Credentials ---
+# Not because anyone plans to put a key here, but because the cost of the one
+# time it happens by accident is a rotation across the whole org. See
+# SUPPLY_CHAIN.md for what to do if one is committed anyway.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+/secrets/
+
+# --- Editor and OS noise ---
+.DS_Store
+*~
+\#*\#
+.\#*
+
+# --- Repository-specific entries below this line ---
+
+# `mkdocs build` writes here: docs/mkdocs.yml sets `site_dir: ../site`, which
+# resolves to the repository root rather than under docs/.
+/site/
+
+# paredit-cli writes its backups next to the sources it rewrites, so they turn
+# up under src/ and t/ as well as at the root the template already covers.
+.paredit.cleanup/
+
+# Serena's workspace. Nothing under .serena is tracked in this org: the
+# language-server cache is machine-local, and project.local.yml carries
+# per-checkout paths. This entry is deliberate rather than inherited -- on the
+# maintainer's machine a global ignore hides the whole directory, so without
+# it the first clone on any other machine would commit the memories.
+.serena/

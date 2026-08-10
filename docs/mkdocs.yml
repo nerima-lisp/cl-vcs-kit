@@ -1,0 +1,57 @@
+site_name: cl-vcs-kit
+site_description: Typed Common Lisp interfaces to Git, GHQ, and registered VCS backends
+site_author: cl-vcs-kit contributors
+site_url: https://nerima-lisp.github.io/cl-vcs-kit/
+repo_name: nerima-lisp/cl-vcs-kit
+repo_url: https://github.com/nerima-lisp/cl-vcs-kit
+edit_uri: edit/main/docs/src/
+
+docs_dir: src
+site_dir: ../site
+use_directory_urls: true
+strict: true
+
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.tabbed
+  - pymdownx.tasklist
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - getting-started.md
+  - Guide:
+      - core-concepts: guide/core-concepts.md
+      - operations: guide/operations.md
+      - structured observations: guide/structured-observations.md
+      - asynchronous tasks: guide/async.md
+      - GHQ: guide/ghq.md
+  - Reference:
+      - API: reference/api.md
+      - architecture: reference/architecture.md
+      - conditions: reference/conditions.md
+      - compatibility: reference/compatibility.md
+  - Project:
+      - development: project/development.md
