@@ -187,8 +187,8 @@ the VCS-KIT task functions.  EVENT-CALLBACK receives direct process events."
                   &rest options)
   "Return the value ON-SUCCESS or ON-FAILURE returns for a checked Git command.
 
-This synchronous CPS entry point is useful when a caller wants a single
-success/error continuation without establishing a condition handler.
+Use this synchronous CPS entry point when a caller wants a single success/error
+continuation without establishing a condition handler.
 
 Only a VCS-ERROR reaches ON-FAILURE: the dispatch is a HANDLER-CASE on that
 one type, which covers GIT-ERROR and its subtypes and also VCS-ARGUMENT-ERROR

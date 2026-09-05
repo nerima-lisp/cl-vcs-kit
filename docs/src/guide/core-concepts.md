@@ -33,7 +33,7 @@ The registry is extensible. A backend may expose normalized operations even
 when its command names differ from Git's, and it may advertise only the
 structured observations it can implement.
 
-## Process results are first-class
+## Process results
 
 Raw and normalized operations both preserve the process-kit result. This
 means callers can inspect exit status, standard output, standard error, and

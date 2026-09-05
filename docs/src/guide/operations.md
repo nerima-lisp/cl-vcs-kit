@@ -21,8 +21,8 @@ execution controls for a backend's version command.
 ## Normalized operations
 
 `run-vcs-operation` resolves an operation through the selected backend's
-mapping and then executes it. The generated wrappers are convenient names for
-the same operation family:
+mapping and then executes it. The generated wrappers call the same operation
+family:
 
 ```lisp
 (vcs-kit:vcs-status repository "--short")

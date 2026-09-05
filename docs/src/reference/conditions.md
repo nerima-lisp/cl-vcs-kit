@@ -56,7 +56,7 @@ whole family.
 
 Preserving the process result is deliberate, not accidental: a failing command
 is reported without discarding what it produced. See
-[process results are first-class](../guide/core-concepts.md#process-results-are-first-class).
+[process results](../guide/core-concepts.md#process-results).
 Retention is not uniform within a family, though. The `result` slot exists on
 all five subtypes of each command family, but only the three outcome
 conditions carry a value, because the other two are signalled before any
