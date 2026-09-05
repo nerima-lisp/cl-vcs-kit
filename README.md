@@ -51,8 +51,7 @@ inputs.cl-vcs-kit = {
 };
 ```
 
-Note the pinned tag. Consumers inside this org pin a release tag rather than
-following the default branch.
+Pin a release tag rather than following the default branch.
 
 For a local checkout, make it and its dependencies visible to the Common Lisp
 source registry, then `(asdf:load-system "cl-vcs-kit")`. The runtime

@@ -72,9 +72,7 @@ If a change lowers coverage for a documented reason, edit the floor in
 `run-tests.lisp` with care and leave a comment naming the change that made
 previously-covered code unreachable. Do not widen a floor to turn a red run
 green: a floor without a recorded reason stops being a ratchet, and an
-unexplained drop is exactly the regression this gate exists to catch. This
-matches the discipline `cl-process-kit` uses in its own `run-tests.lisp`,
-where every floor change carries its reasoning at the constant.
+unexplained drop fails the coverage gate.
 
 ## Source and documentation changes
 
