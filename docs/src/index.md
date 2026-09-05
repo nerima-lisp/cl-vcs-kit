@@ -17,19 +17,18 @@ The package includes:
 - synchronous and asynchronous process tasks with cancellation and event
   cursors.
 
-## Guide map
+## Guides
 
-- [Getting started](getting-started.md) installs the system and makes the first
+- [Getting started](getting-started.md) — installation and the first
   backend-neutral call.
-- [Core concepts](guide/core-concepts.md) explains repository handles,
-  detection, and process results.
-- [Operations](guide/operations.md) covers raw commands, normalized
-  operations, and custom backends.
-- [Structured observations](guide/structured-observations.md) covers typed
-  results for common Git queries.
-- [Asynchronous tasks](guide/async.md) explains cancellation and event
-  delivery.
-- [GHQ](guide/ghq.md) covers repository discovery and GHQ management.
+- [Core concepts](guide/core-concepts.md) — repository handles, detection, and
+  process results.
+- [Operations](guide/operations.md) — raw commands, normalized operations, and
+  custom backends.
+- [Structured observations](guide/structured-observations.md) — typed results
+  for common Git queries.
+- [Asynchronous tasks](guide/async.md) — cancellation and event delivery.
+- [GHQ](guide/ghq.md) — repository discovery and GHQ management.
 
 The [reference section](reference/api.md) groups the public API, while
 [compatibility](reference/compatibility.md) records the boundaries between
