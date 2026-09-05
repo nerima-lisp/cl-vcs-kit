@@ -1,14 +1,12 @@
-;;;; Canonical test entry point. `nix run .#test`, `checks.default`, and
-;;;; `sbcl --script run-tests.lisp` all run this file.
+;;;; `nix run .#test`, `checks.default`, and `sbcl --script run-tests.lisp`
+;;;; run this file.
 ;;;;
-;;;; The library is compiled under sb-cover instrumentation. This script exits
-;;;; non-zero when expression or branch coverage over src/ falls below the
-;;;; floors below.
+;;;; Compile the library under sb-cover instrumentation. Exit non-zero when
+;;;; expression or branch coverage over src/ falls below its floor.
 ;;;;
-;;;; The floors are the measurement at the time they were last raised, minus a
-;;;; small margin. Each lower floor requires a comment naming the change that
-;;;; made previously-covered code unreachable. An unexplained drop fails the
-;;;; coverage gate.
+;;;; Each floor is the previous measured coverage minus a small margin. A lower
+;;;; floor requires a comment naming the change that made covered code
+;;;; unreachable.
 
 (require :asdf)
 (asdf:load-system "cl-host-kit")
