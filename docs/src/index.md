@@ -30,9 +30,9 @@ The package includes:
 - [Asynchronous tasks](guide/async.md) — cancellation and event delivery.
 - [GHQ](guide/ghq.md) — repository discovery and GHQ management.
 
-The [reference section](reference/api.md) groups the public API, while
-[compatibility](reference/compatibility.md) records the boundaries between
-backend-neutral and Git-defined features.
+The [reference section](reference/api.md) lists the public API. [Compatibility]
+(reference/compatibility.md) defines the boundary between backend-neutral and
+Git-defined features.
 
 ## Minimal example
 
