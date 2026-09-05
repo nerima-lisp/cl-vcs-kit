@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Documentation](https://img.shields.io/badge/docs-MkDocs%20Material-3f51b5)](https://nerima-lisp.github.io/cl-vcs-kit/)
 
-`cl-vcs-kit` gives Common Lisp typed, non-shell interfaces to Git, GHQ, and
+`cl-vcs-kit` provides Common Lisp typed, non-shell interfaces to Git, GHQ, and
 other version-control systems, targeting SBCL. Arguments go straight to the
 executable as argv rather than through a shell, so nothing has to be quoted or
 escaped; output comes back as structured results instead of strings the caller

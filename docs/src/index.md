@@ -7,7 +7,7 @@ repository, status, diff, reference, worktree, and submodule observations.
 
 ## Status
 
-Included APIs:
+The public API includes:
 
 - direct Git and GHQ command wrappers;
 - automatic repository discovery through backend marker directories;
