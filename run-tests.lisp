@@ -1,5 +1,5 @@
 ;;;; `nix run .#test`, `checks.default`, and `sbcl --script run-tests.lisp`
-;;;; run this file.
+;;;; are test entry points.
 ;;;;
 ;;;; Compile the library under sb-cover instrumentation. Exit non-zero when
 ;;;; expression or branch coverage over src/ falls below its floor.
@@ -164,9 +164,8 @@ no test. A per-test bound fails the one test that hung and says which."
   (call-exported-function :cl-weave "REQUIRE-COVERAGE-SUPPORT")
   (set-per-test-timeout 30000)
   (redirect-this-systems-fasls root)
-  ;; Instrument, force a recompile of this library alone so the instrumentation
-  ;; actually applies, then restore the default before the suite is compiled so
-  ;; the report measures src/ rather than t/.
+  ;; Instrument and recompile only the library so instrumentation applies, then
+  ;; restore the default before compiling the suite so coverage measures src/.
   (set-coverage-instrumentation 3)
   (asdf:load-system "cl-vcs-kit" :force t)
   (set-coverage-instrumentation 0)

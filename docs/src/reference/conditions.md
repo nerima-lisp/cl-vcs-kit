@@ -1,6 +1,6 @@
 # Conditions
 
-Every condition this package signals is a subtype of `vcs-error`, itself a
+Every condition signalled by the API is a subtype of `vcs-error`, itself a
 subtype of `cl:error`. The type named in a `handler-case` clause decides which
 failures are caught.
 
@@ -82,7 +82,7 @@ so the operating-system level detail stays reachable.
 ### `vcs-error`
 
 Subtype of `cl:error`, with no slots and no readers. Catch it to handle any
-failure this package signals. `with-vcs-result` routes a `vcs-error` to the
+failure signalled by the API. `with-vcs-result` routes a `vcs-error` to the
 `on-failure` continuation of every `/k` entry point. The optional executable
 probe used during backend detection treats any `vcs-error` as an unusable
 backend and returns `nil`.
