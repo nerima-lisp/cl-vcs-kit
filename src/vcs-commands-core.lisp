@@ -178,13 +178,13 @@ plist signals PROGRAM-ERROR from RUN-VCS rather than from here."
 
 Only a VCS-ERROR reaches ON-FAILURE: the dispatch is a HANDLER-CASE on that one
 type, so it covers VCS-COMMAND-ERROR, VCS-BACKEND-ERROR, and
-VCS-ARGUMENT-ERROR alike.  The TYPE-ERROR and PROGRAM-ERROR that
-RUN-VCS/CHECKED documents propagate past both continuations to the caller, so
-a caller that must not escape still needs its own handler.
+VCS-ARGUMENT-ERROR alike.  The TYPE-ERROR and PROGRAM-ERROR from
+RUN-VCS/CHECKED propagate past both continuations to the caller, so a caller
+that must not escape still needs its own handler.
 
 ON-SUCCESS and ON-FAILURE are positional. This keeps the call shaped like
 RUN-VCS/CHECKED, which takes execution options as a flat &REST. A &KEY form
 would satisfy the three-required-argument limit of the org API standard, but
-would change the public calling convention. See reference/api.md."
+would change the public calling convention."
   (with-vcs-result (result on-success on-failure)
     (apply #'run-vcs/checked repository command arguments options)))
