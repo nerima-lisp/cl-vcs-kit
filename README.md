@@ -26,14 +26,13 @@ The source for that site lives in [docs/src/](docs/src/).
 ```lisp
 (asdf:load-system "cl-vcs-kit")
 
-;; Git, typed: a porcelain-v2 status parsed into a snapshot struct.
+;; Git status as a typed porcelain-v2 snapshot.
 (let ((status (vcs-kit:git-status (vcs-kit:open-repository #p"/work/project/"))))
   (mapcar #'vcs-kit:status-entry-path
           (vcs-kit:status-snapshot-entries status)))
-;; => the path of every changed file, as a list of strings
+;; => paths of changed files
 
-;; The same repository through the backend-neutral layer, which resolves
-;; whichever VCS actually owns the directory.
+;; Backend-neutral lookup for the repository owner.
 (let ((repository (vcs-kit:open-vcs-repository #p"/work/project/")))
   (vcs-kit:process-result-stdout
    (vcs-kit:vcs-status repository "--porcelain")))

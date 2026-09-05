@@ -9,8 +9,7 @@ permissions:
   contents: write # Push the update branch.
   pull-requests: write # Open the update PR.
 
-# Serialize a manual dispatch that overlaps the weekly schedule, so the two
-# runs cannot open competing update PRs.
+# Serialize scheduled and manual updates.
 concurrency:
   group: flake-update
   cancel-in-progress: false
@@ -23,16 +22,10 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      # Reuse the shared installer wiring (Cachix self-skips with no cache set),
-      # keeping the nix-installer SHA pin in exactly one place.
+      # Use the shared pinned Nix/Cachix setup.
       - uses: ./.github/actions/nix-setup
 
-      # Open or refresh a PR for every flake input so the pinned inputs stay
-      # aligned without manual edits.
-      #
-      # The default GITHUB_TOKEN does not trigger CI on the bot's PRs, which
-      # prevents workflow loops. Re-run CI by pushing an empty commit or
-      # closing and reopening the PR; use a PAT via `token:` to trigger CI.
+      # The default token does not trigger CI for bot-created pull requests.
       - name: Update flake.lock
         uses: DeterminateSystems/update-flake-lock@834c491b2ece4de0bbd00d85214bb5e83b4da5c6 # v28
         with:

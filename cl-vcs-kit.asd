@@ -1,10 +1,7 @@
 ;;;; cl-vcs-kit.asd
 
-;;;; This form comes FIRST, before any defsystem. ASDF binds *package* to
-;;;; ASDF-USER only for a file it loads itself; read any other way -- a REPL
-;;;; `load`, an editor evaluating the buffer, flake.nix parsing :version -- the
-;;;; file is read in whatever package happens to be current. Saying it makes
-;;;; the file self-contained.
+;;;; ASDF reads this form before the system definition. REPL loads, editor
+;;;; evaluation, and flake.nix version parsing may use the current package.
 (in-package #:asdf-user)
 
 (defsystem "cl-vcs-kit"
@@ -57,15 +54,12 @@ signaled as conditions that retain the underlying command result."
                (:file "ghq-operations-core")
                (:file "ghq-operations-repository")
                (:file "ghq-operations-management")
-               ;; Export declarations are loaded after every definition so the
-               ;; package contract is visible to clients without a monolithic
-               ;; package file.
+               ;; Load export declarations after all definitions.
                (:file "package-exports-core")
                (:file "package-exports-git")
                (:file "package-exports-vcs")
                (:file "package-exports-ghq"))
-  ;; Without this, `asdf:test-system "cl-vcs-kit"` succeeds while running zero
-  ;; tests -- a green result that measures nothing.
+  ;; Make ASDF's test operation run the test system.
   :in-order-to ((test-op (test-op "cl-vcs-kit/test"))))
 
 (defsystem "cl-vcs-kit/test"
