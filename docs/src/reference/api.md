@@ -1,7 +1,7 @@
 # API reference map
 
-The `vcs-kit` package exports the public API. This page groups the symbols by
-purpose so that the detailed guides can explain the intended call boundaries.
+The `vcs-kit` package exports the public API. Symbols are grouped by purpose;
+the detailed guides explain the intended call boundaries.
 
 ## Repository and detection
 
@@ -167,5 +167,5 @@ The source of truth for the complete export list is the
 and
 [`package-exports-ghq.lisp`](https://github.com/nerima-lisp/cl-vcs-kit/blob/main/src/package-exports-ghq.lisp)
 files; `src/package.lisp` itself only defines the package and its
-`cl-process-kit` imports. The guides linked from this page document argument
-boundaries and return shapes for the most commonly used groups.
+`cl-process-kit` imports. The linked guides document argument boundaries and
+return shapes for the most commonly used groups.

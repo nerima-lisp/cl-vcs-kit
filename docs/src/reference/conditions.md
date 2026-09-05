@@ -408,6 +408,6 @@ family and, when the backend is chosen at run time, the capability conditions:
 
 For a single failure continuation instead of a handler, the `/k` entry points
 `run-git/k`, `run-ghq/k`, `run-vcs/k`, and `run-vcs-operation/k` call your
-failure callback with any `vcs-error`, so the grouping on this page applies
+failure callback with any `vcs-error`, so the family grouping above applies
 unchanged. The complete export list, including every reader named here, is in
 [the API reference](api.md).
