@@ -11,9 +11,9 @@
 ;;;; Lisp execution.
 ;;;;
 ;;;; The floors are the measurement at the time they were last raised, minus a
-;;;; small margin. Lowering one is a deliberate act: edit the value and say in
-;;;; a comment which change made previously-covered code unreachable. An
-;;;; unexplained drop is the regression this gate exists to catch.
+;;;; small margin. Each lower floor requires a comment naming the change that
+;;;; made previously-covered code unreachable. An unexplained drop fails the
+;;;; coverage gate.
 
 (require :asdf)
 (asdf:load-system "cl-host-kit")
