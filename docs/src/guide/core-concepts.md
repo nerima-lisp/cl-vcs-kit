@@ -52,7 +52,7 @@ environment updates, output limits, cancellation, process grace periods, and
 decoding policy. See [operations](operations.md) for the complete option
 boundary.
 
-## Three useful boundaries
+## Choose an API layer
 
 Use the Git-specific API when you need Git's full command surface. Use
 backend-neutral normalized operations when the application can work with a

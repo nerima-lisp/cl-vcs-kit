@@ -1,8 +1,8 @@
 # Structured observations
 
-Structured readers turn common Git output into typed objects. They are useful
-when application code needs stable fields such as a path, branch name, object
-ID, or line-count delta instead of parsing command output.
+Structured readers turn common Git output into typed objects. Use them when
+application code needs stable fields such as a path, branch name, object ID, or
+line-count delta instead of parsing command output.
 
 ## Status and diffs
 

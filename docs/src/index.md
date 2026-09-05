@@ -7,7 +7,7 @@ status, diff, reference, worktree, and submodule observations.
 
 ## Status
 
-The package currently includes:
+The package includes:
 
 - direct Git and GHQ command wrappers;
 - automatic repository discovery through backend marker directories;
@@ -35,7 +35,7 @@ The [reference section](reference/api.md) groups the public API, while
 [compatibility](reference/compatibility.md) records the boundaries between
 backend-neutral and Git-defined features.
 
-## Smallest useful example
+## Minimal example
 
 ```lisp
 (asdf:load-system "cl-vcs-kit")
