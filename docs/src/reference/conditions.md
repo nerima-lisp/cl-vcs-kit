@@ -99,7 +99,7 @@ or contains a NUL character; a subcommand that is neither a non-`nil` string
 nor a symbol; an executable that is not a non-empty string; a backend
 designator that is not a keyword, symbol, or string, which any entry point
 taking `:backend` can raise; an operation argument list that is not a proper
-list, distinct from the `:execution-options` plist below; an `:environment`
+list, distinct from the `:execution-options` plist; an `:environment`
 or `:environment-update` value that is not `:inherit`, `nil`, a list of
 `KEY=VALUE` strings, or an alist of unique string keys; an
 `:execution-options` value that is not a proper keyword plist, or that sets a
@@ -109,7 +109,7 @@ structured reader; and GHQ text output requested with anything other than
 
 ## Git conditions
 
-`git-error` and its five subtypes share the slots below, so every reader here
+`git-error` and its five subtypes share the same slots, so every reader
 is available on each subtype. The family is signalled by `run-git`,
 `run-git-async`, `run-git/checked`, `run-git/k`, and every `git-*` wrapper,
 since the wrappers route through `run-git/checked`.
@@ -408,6 +408,6 @@ family and, when the backend is chosen at run time, the capability conditions:
 
 For a single failure continuation instead of a handler, the `/k` entry points
 `run-git/k`, `run-ghq/k`, `run-vcs/k`, and `run-vcs-operation/k` call your
-failure callback with any `vcs-error`, so the family grouping above applies
-unchanged. The complete export list, including every reader named here, is in
+failure callback with any `vcs-error`, so the same family-specific handling
+applies. The complete export list, including every reader named here, is in
 [the API reference](api.md).

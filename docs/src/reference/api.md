@@ -89,8 +89,7 @@ that a common call reads as a Lisp function rather than as a string of flags;
 anything they do not cover is still reachable through `run-git`. The groups
 match the export sections in `src/package-exports-git.lisp`.
 
-Repository creation is `git-init` and `git-clone`, alongside the
-`open-repository` handle above.
+Repository creation uses `git-init` and `git-clone`.
 
 Observation covers `git-status`, `git-diff` with its `git-diff-stat`,
 `git-diff-name-status` and `git-diff-numstat` variants, `git-log`, `git-show`,
