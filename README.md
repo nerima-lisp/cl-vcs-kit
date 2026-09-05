@@ -72,10 +72,10 @@ the native `git` and `ghq` executables the development checks need.
   — typed results for status, diffs, refs, worktrees, and submodules.
 - [API reference](https://nerima-lisp.github.io/cl-vcs-kit/reference/api/)
   — the exported surface grouped by concern, with the condition hierarchy.
-
-[Asynchronous tasks](https://nerima-lisp.github.io/cl-vcs-kit/guide/async/) and
-[GHQ](https://nerima-lisp.github.io/cl-vcs-kit/guide/ghq/) have their own guide
-pages.
+- [Asynchronous tasks](https://nerima-lisp.github.io/cl-vcs-kit/guide/async/)
+  — cancellation and event delivery.
+- [GHQ](https://nerima-lisp.github.io/cl-vcs-kit/guide/ghq/) — repository
+  discovery and GHQ management.
 
 ## Development
 
