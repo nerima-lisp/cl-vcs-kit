@@ -13,7 +13,7 @@ the project tools:
 nix develop
 ```
 
-The normal project checks are:
+Run these checks:
 
 ```sh
 nix run .#test

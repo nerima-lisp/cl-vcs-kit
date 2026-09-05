@@ -81,10 +81,9 @@ source is under `docs/src/`. Every documentation page is listed in
 `docs/mkdocs.yml` so strict builds catch pages that were added but not placed
 in navigation.
 
-[README.md](https://github.com/nerima-lisp/cl-vcs-kit/blob/main/README.md) contains
-the package overview. The docs site contains detailed usage and API boundaries.
-Keep links between related pages relative so local and published builds resolve
-them.
+[README.md](https://github.com/nerima-lisp/cl-vcs-kit/blob/main/README.md) is the
+package overview. The docs site covers usage and API boundaries. Use relative
+links between related pages so local and published builds resolve them.
 
 ## Verification expectations
 
@@ -96,5 +95,3 @@ test selection tells you nothing about the coverage gate, since the floor is
 measured over the whole suite: a subset run can pass while the gate fails.
 Keep external executable requirements explicit when a check cannot run in the
 local environment.
-
-See [getting started](../getting-started.md) for the user-facing setup path.
