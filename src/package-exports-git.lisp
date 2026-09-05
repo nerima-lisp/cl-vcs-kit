@@ -2,7 +2,7 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (export '(
-   ;; Machine-friendly observation.
+   ;; Observation records.
    git-status
    git-diff
    git-diff-stat
