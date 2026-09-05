@@ -81,9 +81,10 @@ source is under `docs/src/`. Every documentation page is listed in
 `docs/mkdocs.yml` so strict builds catch pages that were added but not placed
 in navigation.
 
-[README.md](https://github.com/nerima-lisp/cl-vcs-kit/blob/main/README.md) is the
-package overview. The docs site covers usage and API boundaries. Use relative
-links between related pages so local and published builds resolve them.
+[README.md](https://github.com/nerima-lisp/cl-vcs-kit/blob/main/README.md) covers
+installation and a quick usage path. The docs site covers usage and API
+boundaries. Use relative links between related pages so local and published
+builds resolve them.
 
 ## Verification expectations
 
