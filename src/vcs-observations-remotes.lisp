@@ -13,7 +13,7 @@
                                       execution-options)
   "Return command lines, treating Git's missing-value exit status as empty.
 
-Git uses exit status one for several successful queries that simply find no
+Git uses exit status one for several successful queries that find no
 matching configuration or path.  Structured readers need to distinguish that
 case from all other command failures."
   (handler-case

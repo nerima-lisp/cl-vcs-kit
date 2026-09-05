@@ -60,8 +60,8 @@
      (:remote . :approximate) (:update . :approximate)
      (:sync . :approximate) (:verify . :approximate))))
 
-;; The descriptors intentionally cover both the common protocol and the
-;; important native commands that do not have a portable high-level meaning.
+;; The descriptors cover both the common protocol and native commands that do
+;; not have a portable high-level meaning.
 ;; RUN-VCS remains the escape hatch for any command not represented here.
 (defparameter *vcs-backends*
   (mapcar

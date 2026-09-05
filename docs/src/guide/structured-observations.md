@@ -32,7 +32,7 @@ are available when an application needs to parse compatible output directly.
 
 ## References and repository state
 
-The following readers return typed objects for Git repositories:
+For Git repositories, these readers return typed objects:
 
 - `vcs-list-remotes` returns `vcs-remote` objects;
 - `vcs-list-branches` returns `vcs-branch` objects;
