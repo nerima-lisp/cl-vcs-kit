@@ -53,13 +53,11 @@ jobs:
       - name: Verify the tagged tree
         run: nix flake check --print-build-logs
 
-      # Creates the release as an empty draft. This workflow does not produce a
-      # release body at all.
+      # Create an empty draft; the job does not generate a release body.
       #
-      # As of the 2026-08-01 revision the GitHub Release description is the only
-      # There is no CHANGELOG.md. RELEASE_STANDARD.md defines the release notes.
-      # See RELEASE_STANDARD.md. After this job goes green the maintainer fills
-      # the body in and publishes:
+      # GitHub Release descriptions are the changelog for this repository.
+      # RELEASE_STANDARD.md defines the release notes. After the job succeeds,
+      # the maintainer fills in the body and publishes:
       #
       #   gh release edit "$GITHUB_REF_NAME" --notes-file <file> --draft=false
       #
