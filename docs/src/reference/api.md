@@ -56,8 +56,7 @@ Typed failures are grouped by family in [conditions](conditions.md).
 !!! note "Documented deviation from the API standard"
 
     The org API standard caps required positional arguments at three. Four
-    exported functions take more. This is an accepted exception, not an
-    outstanding defect:
+    exported functions take more:
 
     | Function | Required positionals |
     | --- | --- |
@@ -73,13 +72,10 @@ Typed failures are grouped by family in [conditions](conditions.md).
     in a different shape from the runner they delegate to, and converting a
     call between the two forms would mean rewrapping the options.
 
-    That is a cost weighed against a benefit, not an impossibility. A lambda
-    list of the form `(repository subcommand arguments &key on-success
-    on-failure execution-options)` satisfies the cap and works — the package
-    already passes forwarded options as a single `:execution-options` plist in
-    its structured readers. The exception is recorded here because the trade
-    is part of the public contract, and it can only be revisited in a release
-    that is allowed to break callers.
+    A lambda list of the form `(repository subcommand arguments &key on-success
+    on-failure execution-options)` satisfies the cap and works. The current
+    positional form is part of the public contract; changing it would break
+    callers.
 
 ## Git operations
 

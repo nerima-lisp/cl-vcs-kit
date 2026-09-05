@@ -198,11 +198,10 @@ PROGRAM-ERROR from a malformed OPTIONS plist, propagate past both
 continuations to the caller, so a caller that must not escape still needs its
 own handler.
 
-ON-SUCCESS and ON-FAILURE are positional by design, an accepted exception to
-the three-required-argument limit of the org API standard: it keeps this call
-shaped like RUN-GIT/CHECKED, which takes execution options as a flat &REST.  A
-&KEY form that satisfies the limit does exist; reference/api.md records why it
-was not taken."
+ON-SUCCESS and ON-FAILURE are positional. This keeps the call shaped like
+RUN-GIT/CHECKED, which takes execution options as a flat &REST. A &KEY form
+would satisfy the three-required-argument limit of the org API standard, but
+would change the public calling convention. See reference/api.md."
   (with-vcs-result (result on-success on-failure)
       (apply #'run-git/checked repository subcommand arguments options)))
 
