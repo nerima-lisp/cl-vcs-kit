@@ -1,7 +1,7 @@
 (in-package #:vcs-kit)
 
 ;; Backend-neutral command failures. Backend-specific conditions remain
-;; available as the Git and GHQ operation contracts above.
+;; available as the Git and GHQ operation contracts.
 (define-condition vcs-command-error (vcs-error)
   ((repository
     :initarg :repository
