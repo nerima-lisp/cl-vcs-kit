@@ -2,10 +2,9 @@
 
 ## Public API policy
 
-This release has no compatibility aliases or legacy entry points. Public names
-documented in the API reference are the supported contract; an old name is an
-unknown function rather than a deprecated forwarding adapter. Update callers
-to the current name when moving to this release.
+The public API has no compatibility aliases or legacy entry points. Names
+outside the API reference are unknown functions; callers must use the current
+names.
 
 ## Built-in backend detection
 
