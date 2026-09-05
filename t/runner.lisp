@@ -32,6 +32,6 @@
                    (when coverage (%coverage-excluded-source-pathnames)))
     (error "vcs-kit/test suite failed"))
   ;; Coverage is measured here but reported and gated by run-tests.lisp, which
-  ;; is the canonical entry point and owns the ratchet floors.
+  ;; owns the ratchet floors.
   (format t "~&vcs-kit/test: successful completion~%")
   t)

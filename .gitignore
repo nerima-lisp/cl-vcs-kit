@@ -61,9 +61,6 @@ coverage.dat
 # up under src/ and t/ as well as at the root the template already covers.
 .paredit.cleanup/
 
-# Serena's workspace. Nothing under .serena is tracked in this org: the
-# language-server cache is machine-local, and project.local.yml carries
-# per-checkout paths. This entry is deliberate rather than inherited -- on the
-# maintainer's machine a global ignore hides the whole directory, so without
-# it the first clone on any other machine would commit the memories.
+# Ignore Serena's machine-local language-server cache and per-checkout paths.
+# Keep this rule in the repository because global ignore rules are not shared.
 .serena/

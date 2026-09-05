@@ -9,9 +9,8 @@ description: >-
 # This is the single place where the nix-installer and cachix-action SHAs are
 # pinned; bumping them here bumps every workflow in the repository.
 
-# NOTE: `actions/checkout` intentionally lives in the caller, not here: a
-# local composite action cannot check the repository out, because its own
-# action.yml is not on disk until after checkout has run.
+# `actions/checkout` runs in the caller because this action.yml is unavailable
+# until checkout completes.
 
 inputs:
   cachix-cache:
