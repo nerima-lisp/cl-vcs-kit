@@ -159,4 +159,4 @@ and
 [`package-exports-ghq.lisp`](https://github.com/nerima-lisp/cl-vcs-kit/blob/main/src/package-exports-ghq.lisp)
 files; `src/package.lisp` itself only defines the package and its
 `cl-process-kit` imports. The linked guides give argument boundaries and return
-shapes for the most commonly used groups.
+shapes for the exported groups.
