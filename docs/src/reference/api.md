@@ -1,4 +1,4 @@
-# API reference map
+# API reference
 
 The `vcs-kit` package exports the public API. The sections below group symbols
 by purpose and document the intended call boundaries.

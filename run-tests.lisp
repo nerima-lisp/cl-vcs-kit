@@ -1,14 +1,9 @@
-;;;; Canonical test entry point. `nix run .#test`, `checks.default`, and a
-;;;; contributor typing `sbcl --script run-tests.lisp` all run this same file,
-;;;; so whatever gates here gates everywhere.
+;;;; Canonical test entry point. `nix run .#test`, `checks.default`, and
+;;;; `sbcl --script run-tests.lisp` all run this file.
 ;;;;
-;;;; Coverage is a RATCHET, not an opt-in report. The library is always
-;;;; compiled under sb-cover instrumentation and this script exits non-zero
-;;;; when expression or branch coverage over src/ falls below the floors
-;;;; below. A number that is only printed does not stop a regression; a number
-;;;; that fails the build does. Instrumentation costs nothing measurable here
-;;;; because the suite is dominated by subprocess round-trips rather than by
-;;;; Lisp execution.
+;;;; The library is compiled under sb-cover instrumentation. This script exits
+;;;; non-zero when expression or branch coverage over src/ falls below the
+;;;; floors below.
 ;;;;
 ;;;; The floors are the measurement at the time they were last raised, minus a
 ;;;; small margin. Each lower floor requires a comment naming the change that
