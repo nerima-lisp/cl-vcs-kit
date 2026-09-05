@@ -1,9 +1,9 @@
 # cl-vcs-kit
 
 `cl-vcs-kit` provides Common Lisp interfaces for Git, GHQ, and additional
-version-control backends registered through one backend-neutral API. It keeps
-the raw process result available while also providing typed repository,
-status, diff, reference, worktree, and submodule observations.
+version-control backends registered through one backend-neutral API. The
+library keeps the raw process result available while also providing typed
+repository, status, diff, reference, worktree, and submodule observations.
 
 ## Status
 

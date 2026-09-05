@@ -257,7 +257,7 @@ which is `nil` when the process produced no exit status. Signalled when the
 backend process exits non-zero without timing out or being cancelled. Gated by
 `:check` on `run-vcs`; `run-vcs/checked`, `run-vcs-operation`, the `vcs-*`
 wrappers, and the structured readers always check. Retains the process result.
-Those readers depend on this type being distinguishable: for the Git queries
+The structured readers depend on this type being distinguishable: for the Git queries
 that use exit status one to mean "no match", they catch
 `vcs-command-exit-error`, read the exit code, and re-signal anything that is
 not a one.
@@ -338,7 +338,7 @@ Subtype of `vcs-backend-error`, adding
 when no backend marker is present in the directory, by `open-vcs-repository`
 when an explicit backend was given with `:validate-executable t` and its
 executable probe failed, and by `discover-vcs-repository` when neither the
-starting directory nor any ancestor holds a marker. Those cases are
+starting directory nor any ancestor holds a marker. Both cases are
 distinguishable through `vcs-backend-error-backend`: it is `nil` when
 detection found nothing, and holds the requested descriptor when a named
 backend failed its probe. The marker paths are listed in

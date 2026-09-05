@@ -65,5 +65,6 @@ The command wrappers return the process result from `cl-process-kit`:
 ```
 
 For application logic that should not depend on Git's output format, use a
-reader such as `vcs-status-structured` or `vcs-diff-entries`. Those readers are
-documented in [structured observations](guide/structured-observations.md).
+reader such as `vcs-status-structured` or `vcs-diff-entries`. The
+[structured observations](guide/structured-observations.md) guide documents
+these readers.
