@@ -53,7 +53,7 @@ needed; the event includes the executable, arguments, directory, and timeout.
 
 Typed failures are grouped by family in [conditions](conditions.md).
 
-!!! note "Documented deviation from the API standard"
+!!! note "API standard exception"
 
     The org API standard caps required positional arguments at three. Four
     exported functions take more:
