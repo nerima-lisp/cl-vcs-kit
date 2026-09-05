@@ -8,7 +8,7 @@ Use the pinned development shell for local work:
 nix develop
 ```
 
-The checks and artifacts are:
+Run these checks:
 
 ```sh
 nix run .#test

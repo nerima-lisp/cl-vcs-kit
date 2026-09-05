@@ -7,7 +7,7 @@ status, diff, reference, worktree, and submodule observations.
 
 ## Status
 
-The package includes:
+Included APIs:
 
 - direct Git and GHQ command wrappers;
 - automatic repository discovery through backend marker directories;
@@ -51,7 +51,7 @@ parsing command output itself.
 
 ## Nix workflow
 
-Development and documentation commands:
+Run:
 
 ```sh
 nix develop

@@ -31,10 +31,9 @@ repository handle
   -> optional parser / typed observation
 ```
 
-The raw command layer ends at the process result. Structured readers continue
-through a parser and construct typed objects. This separation lets callers
-keep backend-specific options when they need them while using typed data where
-the library has a defined format.
+The raw command layer ends at the process result. Structured readers parse that
+result into typed objects. Callers can keep backend-specific options while
+using typed data for supported formats.
 
 ## Extensibility points
 
