@@ -52,8 +52,8 @@ readers on a dynamically selected backend.
 
 Git and GHQ are external executables; their installation and version are not
 managed by the ASDF system. GHQ is only needed for GHQ operations. The Nix
-flake declares `x86_64-linux` and `aarch64-darwin` systems for the project
-outputs; the direct ASDF API is not limited to those systems when its Lisp and
+flake declares `x86_64-linux` and `aarch64-darwin` systems for these outputs;
+the direct ASDF API is not limited to those systems when its Lisp and
 external executable dependencies are available.
 
 Process results and typed conditions remain available; unsupported behavior is

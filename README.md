@@ -58,8 +58,8 @@ For a local checkout, make it and its dependencies visible to the Common Lisp
 source registry, then `(asdf:load-system "cl-vcs-kit")`. The runtime
 dependencies are `cl-process-kit`, `cl-host-kit`, and `cl-log-kit`; the test
 system adds `cl-weave`. Host-facing pathname, temporary-directory, and
-command-line operations are provided by `cl-host-kit`, keeping the library's
-runtime surface independent of ASDF's `uiop` utilities. The flake also supplies
+command-line operations are provided by `cl-host-kit`; the runtime surface does
+not depend on ASDF's `uiop` utilities. The flake also supplies
 the native `git` and `ghq` executables the development checks need.
 
 ## Documentation

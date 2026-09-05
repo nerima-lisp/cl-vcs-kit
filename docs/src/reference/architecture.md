@@ -1,7 +1,7 @@
 # Architecture
 
-The system is layered so that process execution, backend selection, and typed
-interpretation can be used independently.
+Process execution, backend selection, and typed interpretation are separate
+layers.
 
 ## Load order
 
@@ -16,8 +16,8 @@ direction is:
 6. backend definitions and command mappings;
 7. Git operations, GHQ operations, and structured readers.
 
-This keeps the public package definition and shared result conventions
-available before higher-level wrappers are loaded.
+The public package definition and shared result conventions load before
+higher-level wrappers.
 
 ## Runtime path
 

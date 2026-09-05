@@ -7,7 +7,7 @@ Git is needed for Git-backed operations. GHQ commands additionally require the
 `ghq` executable on the process path.
 
 When working from this repository, the pinned Nix development shell supplies
-the project tools:
+the development tools:
 
 ```sh
 nix develop
