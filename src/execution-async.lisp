@@ -18,9 +18,7 @@
                                  event-callback)
   "Start EXECUTABLE asynchronously and return process-kit:PROCESS-TASK.
 
-  Cancellation is owned by the returned task.  This mirrors
-PROCESS-KIT:RUN-COMMAND-ASYNC directly instead of manufacturing a second
-token or result wrapper."
+  The returned task owns cancellation."
   (log-kit:log-info *vcs-logger* "run vcs command asynchronously"
                     :executable executable
                     :arguments arguments
