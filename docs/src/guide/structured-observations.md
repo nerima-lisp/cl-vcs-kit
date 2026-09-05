@@ -7,8 +7,8 @@ line-count delta instead of parsing command output.
 ## Status and diffs
 
 `vcs-status-structured` returns a `vcs-status-snapshot` and its status entries.
-The reader supports controls for untracked files, ignored files, stash display,
-renames, extra arguments, and execution options.
+It accepts controls for untracked files, ignored files, stash display, renames,
+extra arguments, and execution options.
 
 ```lisp
 (let ((snapshot (vcs-kit:vcs-status-structured repository)))
