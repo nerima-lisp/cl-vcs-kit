@@ -3,7 +3,7 @@
 ;; Repository metadata is part of each descriptor so public backend objects
 ;; and automatic detection cannot disagree.  The second table records only
 ;; mappings whose common operation name hides a backend-specific or
-;; approximate meaning; exact and ordinary aliases are inferred below.
+;; approximate meaning; unspecified mappings use the command spelling.
 (defparameter *vcs-backend-markers*
   '((:git ".git")
     (:mercurial ".hg")
