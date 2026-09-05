@@ -52,7 +52,7 @@ parsing command output itself.
 
 ## Nix workflow
 
-Use these development and documentation entry points:
+Development and documentation commands:
 
 ```sh
 nix develop

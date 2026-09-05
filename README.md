@@ -109,7 +109,7 @@ the coverage floor and the release process.
 
 ## Contributing
 
-See the org-wide
+Follow the
 [CONTRIBUTING](https://github.com/nerima-lisp/.github/blob/main/CONTRIBUTING.md)
 guide and the
 [package standard](https://github.com/nerima-lisp/.github/blob/main/PACKAGE_STANDARD.md).
