@@ -49,8 +49,7 @@ operation can therefore pass Git options directly:
 
 The default VCS timeout is 30 seconds. Execution options also cover input,
 environment updates, output limits, cancellation, process grace periods, and
-decoding policy. See [operations](operations.md) for the complete option
-boundary.
+decoding policy. See [operations](operations.md) for the option boundary.
 
 ## Choose an API layer
 

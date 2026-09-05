@@ -115,7 +115,7 @@ Plumbing and object/index commands cover `git-config`, `git-hash-object`,
 `git-index-pack`, `git-hook`, `git-replace`, `git-verify-commit`,
 `git-verify-tag`, and `git-commit-graph`.
 
-The complete `git-*` export set is in `src/package-exports-git.lisp`.
+The `git-*` export set is in `src/package-exports-git.lisp`.
 
 ## Backend registry
 
@@ -155,7 +155,7 @@ Typed listings are `ghq-list-repositories` and
 `ghq-list-root-entries`, with `ghq-repository-entry` and `ghq-root-entry`
 accessors.
 
-The source of truth for the complete export list is the
+The export definitions are in
 [`package-exports-core.lisp`](https://github.com/nerima-lisp/cl-vcs-kit/blob/main/src/package-exports-core.lisp),
 [`package-exports-git.lisp`](https://github.com/nerima-lisp/cl-vcs-kit/blob/main/src/package-exports-git.lisp),
 [`package-exports-vcs.lisp`](https://github.com/nerima-lisp/cl-vcs-kit/blob/main/src/package-exports-vcs.lisp),
