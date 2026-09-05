@@ -59,7 +59,7 @@ backend-neutral normalized operations when the application can work with a
 common operation vocabulary. Use structured observations when the application
 needs typed data rather than a backend's text format.
 
-The structured layer is intentionally narrower than the raw command layer:
+The structured layer is narrower than the raw command layer:
 the current readers are Git-defined and report that boundary through backend
 capability metadata. [Compatibility](../reference/compatibility.md) lists the
 current split.

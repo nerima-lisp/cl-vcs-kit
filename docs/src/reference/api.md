@@ -79,7 +79,7 @@ Typed failures are grouped by family in [conditions](conditions.md).
     on-failure execution-options)` satisfies the cap and works — the package
     already passes forwarded options as a single `:execution-options` plist in
     its structured readers. The exception is recorded here because the trade
-    was made deliberately, and because it can only be revisited in a release
+    is part of the public contract, and it can only be revisited in a release
     that is allowed to break callers.
 
 ## Git operations

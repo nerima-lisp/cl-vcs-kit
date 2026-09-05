@@ -26,7 +26,7 @@
                                          timeout environment)
   "Return true when BACKEND's executable can run in DIRECTORY.
 
-The probe is deliberately a version-like command with an empty stdin and
+The probe uses a version-like command with empty stdin and
 discarded output.  It validates the executable and working directory without
 making detection depend on a backend-specific repository mutation."
   (handler-case

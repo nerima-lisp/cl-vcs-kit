@@ -67,7 +67,7 @@ resolves both to absolute paths."
   original-path
   (binary-p nil :type boolean))
 
-;; Backend-neutral value objects.  These deliberately describe the data
+;; Backend-neutral value objects.  These describe the data
 ;; exchanged by common VCS operations rather than mirroring one command's
 ;; textual output.  A backend may leave fields NIL when its native protocol
 ;; does not expose the corresponding information.

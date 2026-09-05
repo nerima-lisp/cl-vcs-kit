@@ -21,7 +21,7 @@
   "Run a backend command with direct argv execution and typed failures.
 
 COMMAND may be a command string/symbol or a list of command fragments.  The
-  raw function is intentionally public: the normalized operation layer cannot
+  raw function is public: the normalized operation layer cannot
 enumerate every native command of every VCS."
   (check-type repository (or null vcs-repository))
   (check-type arguments list)

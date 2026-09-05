@@ -45,7 +45,7 @@ check even when every test passes.
 
 The floors live in `run-tests.lisp` as `+minimum-expression-coverage+` and
 `+minimum-branch-coverage+`. The script prints the measured result for each
-run, so the current baseline is intentionally not duplicated here. The floors
+run, so the current baseline is not duplicated here. The floors
 are ratcheted to the measured baseline; any future decrease must be accompanied
 by a test or an explicit reduction justified by the change.
 
@@ -69,7 +69,7 @@ nix develop --command sbcl --script run-tests.lisp --coverage-report-directory /
 ```
 
 When a change genuinely and justifiably lowers coverage, edit the floor in
-`run-tests.lisp` deliberately and leave a comment naming the change that made
+`run-tests.lisp` with care and leave a comment naming the change that made
 previously-covered code unreachable. Do not widen a floor to turn a red run
 green: a floor without a recorded reason stops being a ratchet, and an
 unexplained drop is exactly the regression this gate exists to catch. This

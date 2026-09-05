@@ -20,7 +20,7 @@
                                    bare-p)
   "Create a repository handle rooted at DIRECTORY.
 
-The handle is deliberately passive: no filesystem or Git probe happens until
+The handle is passive: no filesystem or Git probe happens until
 OPEN-REPOSITORY is called or an operation is run."
   (check-type directory (or string pathname))
   (check-type executable string)

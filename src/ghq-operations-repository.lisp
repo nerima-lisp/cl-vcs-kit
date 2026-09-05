@@ -5,7 +5,7 @@
 (defmacro %define-ghq-get-or-clone (name documentation command)
   "Define one of the GHQ repository retrieval entry points.
 
-GHQ-GET and GHQ-CLONE intentionally share their complete process contract;
+GHQ-GET and GHQ-CLONE share their complete process contract;
 keeping that contract in one expansion prevents their keyword interfaces from
 drifting while leaving ordinary, inspectable functions at the public boundary."
   `(defun ,name (repository-specification &key
