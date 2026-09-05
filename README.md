@@ -10,14 +10,15 @@ executable as argv rather than through a shell, so nothing has to be quoted or
 escaped; output comes back as structured results instead of strings the caller
 re-parses; and failures signal conditions that keep the underlying command
 result attached. A backend-neutral layer maps a common operation vocabulary
-onto Git, Mercurial, Subversion, Bazaar, Fossil, Darcs, and Pijul without
-pretending they share semantics. Its runtime dependencies are the org's
+onto Git, Mercurial, Subversion, Bazaar, Fossil, Darcs, and Pijul; mappings may
+be approximate because those backends have different semantics. Its runtime
+dependencies are the org's
 [`cl-process-kit`](https://github.com/nerima-lisp/cl-process-kit),
 [`cl-host-kit`](https://github.com/nerima-lisp/cl-host-kit), and
 [`cl-log-kit`](https://github.com/nerima-lisp/cl-log-kit); protocol parsers stay
 local to the formats they implement.
 
-Full documentation is published at <https://nerima-lisp.github.io/cl-vcs-kit/>.
+Documentation is published at <https://nerima-lisp.github.io/cl-vcs-kit/>.
 The source for that site lives in [docs/src/](docs/src/).
 
 ## Quick Start
