@@ -2,9 +2,9 @@
 
 ## Prerequisites
 
-The ASDF system depends on `cl-process-kit`. Git is needed for Git-backed
-operations. GHQ commands additionally require the `ghq`
-executable on the process path.
+The ASDF system depends on `cl-process-kit`, `cl-host-kit`, and `cl-log-kit`.
+Git is needed for Git-backed operations. GHQ commands additionally require the
+`ghq` executable on the process path.
 
 When working from this repository, the pinned Nix development shell supplies
 the project tools:

@@ -52,8 +52,7 @@ parsing command output itself.
 
 ## Nix workflow
 
-The repository exposes the same development and documentation entry points as
-the other `nerima-lisp` kits:
+Use these development and documentation entry points:
 
 ```sh
 nix develop
