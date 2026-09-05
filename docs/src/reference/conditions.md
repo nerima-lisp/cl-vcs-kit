@@ -1,9 +1,8 @@
 # Conditions
 
 Every condition this package signals is a subtype of `vcs-error`, itself a
-subtype of `cl:error`. The type you name in a `handler-case` clause decides
-which failures you catch, so this page states the inheritance explicitly
-rather than leaving it to be inferred from the names.
+subtype of `cl:error`. The type named in a `handler-case` clause decides which
+failures are caught. The inheritance is stated explicitly below.
 
 Three families sit under the root and do not overlap. Which one you handle
 follows from the entry point you call, not the backend that happens to run:
@@ -83,11 +82,10 @@ so the operating-system level detail stays reachable.
 ### `vcs-error`
 
 Subtype of `cl:error`, with no slots and no readers. Catch it to handle any
-failure this package signals. The library does that twice itself: in
-`with-vcs-result`, which routes a `vcs-error` to the `on-failure` continuation
-of every `/k` entry point, and in the optional executable probe used during
-backend detection, which treats any `vcs-error` as an unusable backend and
-returns `nil`.
+failure this package signals. `with-vcs-result` routes a `vcs-error` to the
+`on-failure` continuation of every `/k` entry point. The optional executable
+probe used during backend detection treats any `vcs-error` as an unusable
+backend and returns `nil`.
 
 ### `vcs-argument-error`
 

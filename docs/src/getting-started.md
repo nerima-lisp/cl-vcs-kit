@@ -50,9 +50,9 @@ backend and the supplied directory.
   (vcs-kit:vcs-status repository "--porcelain"))
 ```
 
-If no registered backend is found, the library signals a typed backend
-detection condition. See [compatibility](reference/compatibility.md) for the
-built-in marker directories.
+If no registered backend is found, a typed backend detection condition is
+signalled. See [compatibility](reference/compatibility.md) for the built-in
+marker directories.
 
 ## Choose the result shape
 

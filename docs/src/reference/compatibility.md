@@ -56,6 +56,6 @@ flake declares `x86_64-linux` and `aarch64-darwin` systems for the project
 outputs; the direct ASDF API is not limited to those systems when its Lisp and
 external executable dependencies are available.
 
-The library preserves process results and typed conditions rather than
-silently translating unsupported behavior. See [core concepts](../guide/core-concepts.md)
-and [operations](../guide/operations.md) for the selection rules.
+Process results and typed conditions remain available; unsupported behavior is
+not silently translated. See [core concepts](../guide/core-concepts.md) and
+[operations](../guide/operations.md) for the selection rules.
