@@ -61,8 +61,8 @@ recorded total of zero fails the run instead of reporting a vacuous 100%,
 which is what you get if the library loaded from stale FASLs or sb-cover was
 unavailable.
 
-One flag remains. `--coverage-report-directory <dir>` additionally writes an
-sb-cover HTML report to `<dir>`:
+`--coverage-report-directory <dir>` additionally writes an sb-cover HTML report
+to `<dir>`:
 
 ```sh
 nix develop --command sbcl --script run-tests.lisp --coverage-report-directory /tmp/cl-vcs-kit-coverage

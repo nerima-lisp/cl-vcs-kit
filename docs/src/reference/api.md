@@ -1,7 +1,6 @@
 # API reference
 
-The `vcs-kit` package exports the public API. The sections below group symbols
-by purpose and document the intended call boundaries.
+The `vcs-kit` package exports the public API, grouped by call boundary.
 
 ## Repository and detection
 
@@ -84,10 +83,9 @@ Typed failures are grouped by family in [conditions](conditions.md).
 
 ## Git operations
 
-The Git wrappers are thin argv builders over `run-git/checked`. They exist so
-that a common call reads as a Lisp function rather than as a string of flags;
-anything they do not cover is still reachable through `run-git`. The groups
-match the export sections in `src/package-exports-git.lisp`.
+The Git wrappers build argv lists for `run-git/checked`; uncovered commands remain
+available through `run-git`. The groups match the export sections in
+`src/package-exports-git.lisp`.
 
 Repository creation uses `git-init` and `git-clone`.
 
@@ -117,9 +115,7 @@ Plumbing and object/index commands cover `git-config`, `git-hash-object`,
 `git-index-pack`, `git-hook`, `git-replace`, `git-verify-commit`,
 `git-verify-tag`, and `git-commit-graph`.
 
-The full set is the `git-*` block of `src/package-exports-git.lisp`, which
-covers the locally available Git command families. The names listed here are
-the ones a caller reaches for first rather than the whole list.
+The complete `git-*` export set is in `src/package-exports-git.lisp`.
 
 ## Backend registry
 

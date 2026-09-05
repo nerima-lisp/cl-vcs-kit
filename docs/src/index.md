@@ -61,4 +61,4 @@ nix build .#docs
 ```
 
 See [development](project/development.md) for the local MkDocs command and
-the verification boundaries of each entry point.
+verification requirements.
