@@ -2,7 +2,7 @@
 
 Every condition this package signals is a subtype of `vcs-error`, itself a
 subtype of `cl:error`. The type named in a `handler-case` clause decides which
-failures are caught. The inheritance is stated explicitly below.
+failures are caught.
 
 Three families sit under the root and do not overlap. Which one you handle
 follows from the entry point you call, not the backend that happens to run:

@@ -87,7 +87,7 @@ Typed failures are grouped by family in [conditions](conditions.md).
 The Git wrappers are thin argv builders over `run-git/checked`. They exist so
 that a common call reads as a Lisp function rather than as a string of flags;
 anything they do not cover is still reachable through `run-git`. The groups
-below follow the export sections in `src/package-exports-git.lisp`.
+match the export sections in `src/package-exports-git.lisp`.
 
 Repository creation is `git-init` and `git-clone`, alongside the
 `open-repository` handle above.
@@ -119,8 +119,8 @@ Plumbing and object/index commands cover `git-config`, `git-hash-object`,
 `git-verify-tag`, and `git-commit-graph`.
 
 The full set is the `git-*` block of `src/package-exports-git.lisp`, which
-covers the locally available Git command families; the names above are the
-ones a caller reaches for first rather than the whole list.
+covers the locally available Git command families. The names listed here are
+the ones a caller reaches for first rather than the whole list.
 
 ## Backend registry
 
