@@ -165,7 +165,7 @@ the default is silent for library callers.")
   "Build the process-kit options shared by sync and async execution.
 
 The sentinel values are kept at this boundary so callers can distinguish an
-omitted option from an explicit NIL.  This function returns data only;
+omitted option from an explicit NIL.  It returns data only;
 the process invocation remains in the synchronous and asynchronous runners."
   (let ((options (list :timeout timeout
                        :on-timeout :return
@@ -238,7 +238,7 @@ the process invocation remains in the synchronous and asynchronous runners."
 (defmacro with-vcs-result ((result on-success on-failure) form)
   "Run FORM and dispatch its value or a VCS-ERROR to a callback.
 
-This function is synchronous CPS: callers can keep control flow in
+Synchronous CPS lets callers keep control flow in
 callbacks while the process implementation remains replaceable by the
 asynchronous process-kit API."
   `(%dispatch-vcs-result

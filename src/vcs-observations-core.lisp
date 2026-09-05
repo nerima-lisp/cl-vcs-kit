@@ -98,7 +98,7 @@
   "Return Git status as a VCS-STATUS-SNAPSHOT and VCS-STATUS-ENTRY list.
 
 The raw GIT-STATUS operation remains available for callers that need the
-backend-specific result.  This function rejects non-Git
+backend-specific result.  It rejects non-Git
 repositories until another backend has a defined equivalent parser."
   (%vcs-git-repository repository :status)
   (check-type arguments list)
