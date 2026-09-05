@@ -8,7 +8,7 @@ Use the pinned development shell for local work:
 nix develop
 ```
 
-The repository exposes these checks and artifacts:
+The checks and artifacts are:
 
 ```sh
 nix run .#test
@@ -54,8 +54,8 @@ before CL-WEAVE starts the suite, so they are excluded from the behavioral
 denominator. Their definitions remain part of the built system, and the
 backend data is exercised through the backend logic that consumes it.
 
-Two details of how the measurement is scoped are worth knowing before you read
-a result. Instrumentation is switched off again after the library is compiled
+The measurement scope has two details. Instrumentation is switched off again
+after the library is compiled
 and before the suite is, so the figures describe `src/` and not `t/`. And a
 recorded total of zero fails the run instead of reporting a vacuous 100%,
 which is what you get if the library loaded from stale FASLs or sb-cover was
@@ -68,7 +68,7 @@ sb-cover HTML report to `<dir>`:
 nix develop --command sbcl --script run-tests.lisp --coverage-report-directory /tmp/cl-vcs-kit-coverage
 ```
 
-When a change genuinely and justifiably lowers coverage, edit the floor in
+If a change lowers coverage for a documented reason, edit the floor in
 `run-tests.lisp` with care and leave a comment naming the change that made
 previously-covered code unreachable. Do not widen a floor to turn a red run
 green: a floor without a recorded reason stops being a ratchet, and an

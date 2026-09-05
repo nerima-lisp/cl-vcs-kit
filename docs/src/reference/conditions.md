@@ -93,8 +93,8 @@ Subtype of `vcs-error`. Readers: `vcs-argument-error-argument`,
 `vcs-argument-error-position` (`nil` when the argument is not positional), and
 `vcs-argument-error-reason`. Signalled before any process starts, so no
 process result exists. Every situation is argument validation, shared by the
-Git, GHQ, and backend-neutral entry points. The list below is the set a caller
-usually meets rather than a closed one: a command argument that is `nil`
+Git, GHQ, and backend-neutral entry points. Validation covers a command
+argument that is `nil`
 or contains a NUL character; a subcommand that is neither a non-`nil` string
 nor a symbol; an executable that is not a non-empty string; a backend
 designator that is not a keyword, symbol, or string, which any entry point
