@@ -51,6 +51,11 @@
         (run-vcs nil "status" nil
                  :executable "/definitely-missing-vcs-executable"
                  :check t))))
+  (it "run-vcs forwards poll interval validation to process-kit"
+    (%expect-condition simple-error
+      (run-vcs nil "status" nil
+               :executable (%program-path "true")
+               :poll-interval 0)))
 
   (it "maps generic subprocess I/O failures to a typed condition"
     (let ((condition

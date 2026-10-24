@@ -17,6 +17,7 @@
                   cancellation-token
                   (grace-period +unspecified-option+)
                   (drain-timeout-seconds +unspecified-option+)
+                  (poll-interval +unspecified-option+)
                   (decoding-error-policy :replace))
   "Run a backend command with direct argv execution and typed failures.
 
@@ -50,6 +51,7 @@ enumerate every native command of every VCS."
                                   :cancellation-token cancellation-token
                                   :grace-period grace-period
                                   :drain-timeout-seconds drain-timeout-seconds
+                                  :poll-interval poll-interval
                                   :command-directory actual-directory
                                   :environment actual-environment
                                   :environment-update environment-update

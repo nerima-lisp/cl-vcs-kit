@@ -161,6 +161,7 @@ the default is silent for library callers.")
                                cancellation-token
                                (grace-period +unspecified-option+)
                                (drain-timeout-seconds +unspecified-option+)
+                               (poll-interval +unspecified-option+)
                                event-callback)
   "Build the process-kit options shared by sync and async execution.
 
@@ -181,7 +182,9 @@ the process invocation remains in the synchronous and asynchronous runners."
       (add-option :max-output-characters max-output-characters)
       (add-present-option :cancellation-token cancellation-token)
       (add-option :grace-period grace-period)
-      (add-option :drain-timeout-seconds drain-timeout-seconds)
+      (progn
+        (add-option :drain-timeout-seconds drain-timeout-seconds)
+        (add-option :poll-interval poll-interval))
       (add-present-option :event-callback event-callback))
     options))
 
@@ -193,6 +196,7 @@ the process invocation remains in the synchronous and asynchronous runners."
                            cancellation-token
                            (grace-period +unspecified-option+)
                            (drain-timeout-seconds +unspecified-option+)
+                           (poll-interval +unspecified-option+)
                            command-directory
                            (environment :inherit)
                            (environment-update nil)
@@ -223,7 +227,8 @@ the process invocation remains in the synchronous and asynchronous runners."
                   :max-output-characters max-output-characters
                   :cancellation-token cancellation-token
                   :grace-period grace-period
-                  :drain-timeout-seconds drain-timeout-seconds)))
+                  :drain-timeout-seconds drain-timeout-seconds
+                  :poll-interval poll-interval)))
     (apply #'process-kit:run-command command options)))
 
 (defun %result-output (result)
