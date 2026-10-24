@@ -13,11 +13,11 @@ signaled as conditions that retain the underlying command result."
   :author "takeokunn <bararararatty@gmail.com>"
   :maintainer "takeokunn <bararararatty@gmail.com>"
   :license "MIT"
-  :version "0.2.0"
+  :version "0.2.1"
   :homepage "https://github.com/nerima-lisp/cl-vcs-kit"
   :bug-tracker "https://github.com/nerima-lisp/cl-vcs-kit/issues"
   :source-control (:git "https://github.com/nerima-lisp/cl-vcs-kit.git")
-  :depends-on ("cl-process-kit" "cl-host-kit" "cl-log-kit")
+  :depends-on ((:version "cl-process-kit" "3.4.1") "cl-host-kit" "cl-log-kit")
   :pathname "src"
   :serial t
   :components ((:file "package")
@@ -67,7 +67,7 @@ signaled as conditions that retain the underlying command result."
   :author "takeokunn <bararararatty@gmail.com>"
   :maintainer "takeokunn <bararararatty@gmail.com>"
   :license "MIT"
-  :version "0.2.0"
+  :version "0.2.1"
   :homepage "https://github.com/nerima-lisp/cl-vcs-kit"
   :bug-tracker "https://github.com/nerima-lisp/cl-vcs-kit/issues"
   :source-control (:git "https://github.com/nerima-lisp/cl-vcs-kit.git")
