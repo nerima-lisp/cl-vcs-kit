@@ -167,7 +167,8 @@ the default is silent for library callers.")
 The sentinel values are kept at this boundary so callers can distinguish an
 omitted option from an explicit NIL.  It returns data only;
 the process invocation remains in the synchronous and asynchronous runners."
-  (let ((options (list :timeout timeout
+  (let ((options (list :use-posix-spawn t
+                       :timeout timeout
                        :on-timeout :return
                        :on-cancel :return)))
     (flet ((add-option (key value)

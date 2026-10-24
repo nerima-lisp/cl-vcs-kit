@@ -59,7 +59,9 @@
                       :grace-period 1d0
                       :drain-timeout-seconds 2d0
                       :event-callback callback)))
-      (expect (getf defaults :timeout) :to-equal 3d0)
+      (progn
+        (expect (getf defaults :timeout) :to-equal 3d0)
+        (expect (getf defaults :use-posix-spawn) :to-be-truthy))
       (expect (getf defaults :on-timeout) :to-be :return)
       (expect (getf defaults :on-cancel) :to-be :return)
       (dolist (key '(:input :max-output-characters :cancellation-token
@@ -100,7 +102,11 @@
           :event-callback callback)
          :to-be :process-task)
         (expect call :to-be-truthy)
-        (expect (getf (second call) :timeout) :to-equal 4d0)
+        (progn
+          (expect (getf (second call) :timeout)
+                  :to-equal 4d0)
+          (expect (getf (second call) :use-posix-spawn)
+                  :to-be-truthy))
         (expect (getf (second call) :input) :to-be nil)
         (expect (getf (second call) :max-output-characters) :to-equal 128)
         (expect (getf (second call) :grace-period) :to-equal 1d0)
@@ -117,8 +123,11 @@
         (expect (vcs-kit::%run-vcs-command-async "/bin/echo" '("status"))
                 :to-be :process-task)
         (expect call :to-be-truthy)
-        (expect (getf (second call) :timeout)
-                :to-equal vcs-kit::+default-vcs-timeout+)
+        (progn
+          (expect (getf (second call) :timeout)
+                  :to-equal vcs-kit::+default-vcs-timeout+)
+          (expect (getf (second call) :use-posix-spawn)
+                  :to-be-truthy))
         (expect (getf (second call) :on-timeout) :to-be :return)
         (expect (getf (second call) :on-cancel) :to-be :return))))
 
@@ -132,8 +141,11 @@
         (expect (vcs-kit::%run-vcs-command "/bin/echo" '("status"))
                 :to-be :process-result)
         (expect call :to-be-truthy)
-        (expect (getf (second call) :timeout)
-                :to-equal vcs-kit::+default-vcs-timeout+)
+        (progn
+          (expect (getf (second call) :timeout)
+                  :to-equal vcs-kit::+default-vcs-timeout+)
+          (expect (getf (second call) :use-posix-spawn)
+                  :to-be-truthy))
         (expect (getf (second call) :on-timeout) :to-be :return)
         (expect (getf (second call) :on-cancel) :to-be :return))))
 

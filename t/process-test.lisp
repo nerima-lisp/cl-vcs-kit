@@ -26,7 +26,9 @@
 
   (it "omits optional process keys when they were not supplied"
     (let ((options (vcs-kit::%vcs-process-options :timeout 7)))
-      (expect (getf options :timeout) :to-equal 7)
+      (progn
+        (expect (getf options :timeout) :to-equal 7)
+        (expect (getf options :use-posix-spawn) :to-be-truthy))
       (expect (getf options :on-timeout) :to-be :return)
       (expect (getf options :on-cancel) :to-be :return)
       (dolist (key '(:input :max-output-characters :cancellation-token

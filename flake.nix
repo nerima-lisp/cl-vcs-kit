@@ -5,7 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     cl-process-kit = {
-      url = "github:nerima-lisp/cl-process-kit/v3.2.0";
+      url = "github:nerima-lisp/cl-process-kit/v3.4.1";
       flake = false;
     };
     cl-weave = {
