@@ -282,3 +282,22 @@ unless the caller passed an explicit GHQ VCS filter, which is echoed back."
 PRIMARY-P is true for the first root only and NIL for every later one."
   (path "" :type string)
   (primary-p nil :type boolean))
+
+(defstruct (line-diff-line (:constructor %make-line-diff-line (kind text newline-p)))
+  (kind :context :type (member :context :delete :insert))
+  (text "" :type string)
+  (newline-p t :type boolean))
+
+(defstruct (line-diff-hunk (:constructor %make-line-diff-hunk))
+  (old-start 0 :type (integer 0 *))
+  (old-count 0 :type (integer 0 *))
+  (new-start 0 :type (integer 0 *))
+  (new-count 0 :type (integer 0 *))
+  (lines nil :type list))
+
+(defstruct (line-diff-result (:constructor %make-line-diff-result))
+  (status :ok :type (member :ok :too-large))
+  (hunks nil :type list)
+  (old-path nil :type (or null string))
+  (new-path nil :type (or null string))
+  (edit-distance nil :type (or null (integer 0 *))))

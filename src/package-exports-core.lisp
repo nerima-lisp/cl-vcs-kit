@@ -244,3 +244,27 @@
    git-clone
 
     )))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (export '(
+   ;; Pure line differences.
+   compute-line-diff
+   format-unified-diff
+   line-diff-result
+   line-diff-result-p
+   line-diff-result-status
+   line-diff-result-hunks
+   line-diff-result-old-path
+   line-diff-result-new-path
+   line-diff-result-edit-distance
+   line-diff-hunk
+   line-diff-hunk-p
+   line-diff-hunk-old-start
+   line-diff-hunk-old-count
+   line-diff-hunk-new-start
+   line-diff-hunk-new-count
+   line-diff-hunk-lines
+   line-diff-line
+   line-diff-line-p
+   line-diff-line-kind
+   line-diff-line-text
+   line-diff-line-newline-p)))

@@ -13,7 +13,7 @@ signaled as conditions that retain the underlying command result."
   :author "takeokunn <bararararatty@gmail.com>"
   :maintainer "takeokunn <bararararatty@gmail.com>"
   :license "MIT"
-  :version "0.2.1"
+  :version "0.3.0"
   :homepage "https://github.com/nerima-lisp/cl-vcs-kit"
   :bug-tracker "https://github.com/nerima-lisp/cl-vcs-kit/issues"
   :source-control (:git "https://github.com/nerima-lisp/cl-vcs-kit.git")
@@ -35,6 +35,7 @@ signaled as conditions that retain the underlying command result."
                (:file "parse-common")
                (:file "parse-status")
                (:file "parse-diff")
+               (:file "line-diff")
                (:file "ghq-structured")
                (:file "vcs-backend-definition")
                (:file "vcs-backend-core")
@@ -67,7 +68,7 @@ signaled as conditions that retain the underlying command result."
   :author "takeokunn <bararararatty@gmail.com>"
   :maintainer "takeokunn <bararararatty@gmail.com>"
   :license "MIT"
-  :version "0.2.1"
+  :version "0.3.0"
   :homepage "https://github.com/nerima-lisp/cl-vcs-kit"
   :bug-tracker "https://github.com/nerima-lisp/cl-vcs-kit/issues"
   :source-control (:git "https://github.com/nerima-lisp/cl-vcs-kit.git")
@@ -81,6 +82,7 @@ signaled as conditions that retain the underlying command result."
                (:file "data-test")
                (:file "execution-test")
                (:file "parser-test")
+               (:file "line-diff-test")
                (:file "process-test")
                (:file "ghq-test")
                (:file "ghq-operation-test")
