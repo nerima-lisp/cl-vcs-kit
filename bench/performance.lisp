@@ -1,5 +1,8 @@
 (require :asdf)
-(asdf:load-system "cl-vcs-kit")
+(progn
+  (asdf:load-system "cl-vcs-kit")
+  (assert (equal (truename "cl-vcs-kit.asd")
+                 (truename (asdf:system-source-file "cl-vcs-kit")))))
 
 (in-package #:vcs-kit)
 
@@ -182,3 +185,5 @@
    (lambda (specification)
      (if (string= specification "owner/project") 1 0))
    ghq-iterations))
+
+(progn (load (asdf:system-relative-pathname "cl-vcs-kit" "bench/line-diff.lisp")) (funcall (find-symbol "RUN-LINE-DIFF-BENCHMARKS" "VCS-KIT/BENCHMARK")))

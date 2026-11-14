@@ -41,12 +41,25 @@ The source for that site lives in [docs/src/](docs/src/).
 Use `discover-vcs-repository` instead when the starting directory may be nested
 somewhere inside a working tree.
 
+Compare text in memory without running a VCS command:
+
+```lisp
+(let ((diff (vcs-kit:compute-line-diff (format nil "old~%")
+                                       (format nil "new~%"))))
+  (when (eq :ok (vcs-kit:line-diff-result-status diff))
+    (vcs-kit:format-unified-diff diff)))
+```
+
+The line-diff API returns `:too-large` when the edit distance exceeds its
+limit. See the [API reference](https://nerima-lisp.github.io/cl-vcs-kit/reference/api/#in-memory-line-diffs)
+for hunk data and formatting options.
+
 ## Install
 
 ```nix
 # flake.nix
 inputs.cl-vcs-kit = {
-  url = "github:nerima-lisp/cl-vcs-kit/v0.2.0";
+  url = "github:nerima-lisp/cl-vcs-kit/v0.3.0";
   inputs.nixpkgs.follows = "nixpkgs";
 };
 ```

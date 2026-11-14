@@ -55,3 +55,4 @@ nav:
       - compatibility: reference/compatibility.md
   - Project:
       - development: project/development.md
+      - v0.3.0 release notes: project/release-v0.3.0.md

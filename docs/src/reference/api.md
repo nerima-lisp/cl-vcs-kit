@@ -134,6 +134,50 @@ Their result types include `vcs-status-snapshot`, `vcs-status-entry`,
 `vcs-diff-entry`, `vcs-remote`, `vcs-branch`, `vcs-tag`, `vcs-commit`,
 `vcs-conflict`, `vcs-stash-entry`, `vcs-worktree`, and `vcs-submodule`.
 
+## In-memory line diffs
+
+`compute-line-diff` compares two strings without file access or subprocesses:
+
+```lisp
+(vcs-kit:compute-line-diff old-text new-text
+                          :old-path "original.txt"
+                          :new-path "recovered.txt"
+                          :context 3
+                          :max-edit-distance 512)
+```
+
+Paths are optional labels. `context` is the nonnegative number of unchanged
+lines retained before and after a change, defaulting to 3. Lines split at LF;
+CR characters remain part of their text. An empty string has no lines. The
+presence of a final LF participates in equality, so adding or removing it is
+a change.
+
+The function returns a `line-diff-result`. Its accessors are
+`line-diff-result-status`, `line-diff-result-hunks`,
+`line-diff-result-old-path`, `line-diff-result-new-path`, and
+`line-diff-result-edit-distance`. The status is `:ok` for a completed result,
+including identical input with no hunks, or `:too-large` when the shortest
+edit script exceeds the limit. A cutoff result has no hunks and a `nil` edit
+distance. Distance counts insertions and deletions, so replacing one line
+normally costs two. The default limit is 512; the search stops by distance,
+independently of elapsed time.
+
+Each `line-diff-hunk` exposes `line-diff-hunk-old-start`,
+`line-diff-hunk-old-count`, `line-diff-hunk-new-start`,
+`line-diff-hunk-new-count`, and `line-diff-hunk-lines`. Starts use unified-diff
+line numbering: a nonempty range starts at line 1 or later, while an empty
+range names the preceding line, including 0 at the start of a file.
+
+Each `line-diff-line` exposes `line-diff-line-kind` (`:context`, `:delete`,
+or `:insert`), `line-diff-line-text` (without LF), and
+`line-diff-line-newline-p` (whether its source line ended in LF).
+
+`format-unified-diff` takes a completed result and returns a string with
+`---` and `+++` headers, hunk ranges, and `\ No newline at end of file`
+markers where needed. Omitted path labels default to `a` and `b`. Identical
+inputs format as an empty string. Check the status first: formatting a cutoff
+result signals an error.
+
 ## Async and cancellation
 
 Task lifecycle symbols are `await-vcs-task`, `cancel-vcs-task`,

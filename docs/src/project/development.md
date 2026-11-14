@@ -74,6 +74,42 @@ previously-covered code unreachable. Do not widen a floor to turn a red run
 green: a floor without a recorded reason stops being a ratchet, and an
 unexplained drop fails the coverage gate.
 
+## Line-diff benchmark
+
+Run the benchmark from the checkout root with the workspace system registered:
+
+```sh
+uptime
+nix develop --command sbcl --noinform \
+  --eval '(require :asdf)' \
+  --eval '(asdf:clear-system "cl-vcs-kit")' \
+  --eval '(asdf:load-asd (truename "cl-vcs-kit.asd"))' \
+  --script bench/performance.lisp
+uptime
+```
+
+The script measures parser workloads and 20,000-line diffs.
+It reports median, p95, and maximum elapsed time, cumulative allocation, and a
+conservative peak heap bound that includes both input strings. The line-diff
+results use two excluded warmups and 25 measured samples per workload and
+limit, with a full collection before each sample. The p95 uses the nearest
+rank, the 24th sorted observation out of 25. The default limit's p95 must be
+at most 100 ms for 100 replacements and 500 ms for entirely different inputs;
+the conservative peak heap bound must be at most 32 MiB. A failing budget
+makes the script exit nonzero. Keep both `uptime` outputs with the result;
+maximum times remain diagnostic.
+
+`bench/line-diff.lisp` also supplies a definitions-only runner for consumer
+checks. After loading the library and that file, call
+`vcs-kit/benchmark:run-line-diff-benchmarks :distances '(512)`. This benchmark
+package is separate from the production API. Callers can provide captured
+load information through `:uptime-text`; sandboxed runs label missing load
+information explicitly. Output includes GC CPU time during measured calls;
+the full collections before samples are excluded. GC counts are marked
+unavailable because SBCL's asynchronous hook delivery cannot assign each
+collection to the measured call reliably.
+See the [release notes](release-v0.3.0.md) for the measured workloads and limits.
+
 ## Source and documentation changes
 
 The package source is under `src/`, tests are under `t/`, and documentation
