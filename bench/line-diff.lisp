@@ -10,6 +10,38 @@
                        (:different "other"))
                      index))))
 
+(defun %benchmark-repeated-line-text (changed-p)
+  (with-output-to-string (stream)
+    (loop for index below 20000
+          do (write-line (cond ((and changed-p (zerop (mod index 200))) "changed")
+                               ((zerop (mod index 10)) "repeat")
+                               (t ""))
+                         stream))))
+
+(defun %benchmark-check-repeated-fixture (old new)
+  (labels ((lines (text)
+             (loop for start = 0 then (1+ end)
+                   for end = (position #\Newline text :start start)
+                   while end collect (subseq text start end))))
+    (let* ((old-lines (lines old))
+           (new-lines (lines new))
+           (witness (loop for line in old-lines for index from 0
+                          unless (zerop (mod index 200)) collect line)))
+      (assert (= 20000 (length old-lines) (length new-lines)))
+      (assert (= 18000 (count "" old-lines :test #'string=)))
+      (assert (every (lambda (line) (member line '("" "repeat") :test #'string=))
+                     old-lines))
+      (assert (= 100 (count "changed" new-lines :test #'string=)))
+      (assert (loop for old-line in old-lines for new-line in new-lines
+                    for index from 0
+                    always (if (zerop (mod index 200))
+                               (string= new-line "changed")
+                               (string= old-line new-line))))
+      ;; The 100 new sentinels cannot match any old line, bounding the LCS by
+      ;; 19,900. This equal subsequence attains it, proving edit distance 200.
+      (assert (= 19900 (length witness)))
+      (assert (equal witness (remove "changed" new-lines :test #'string=))))))
+
 (defun %benchmark-line-diff-check (result expected-status)
   (assert (eq (line-diff-result-status result) expected-status))
   (if (eq expected-status :ok)
@@ -68,43 +100,55 @@
           :gc-run-ms-total gc-ms :gc-count :unavailable)))
 
 (defun run-line-diff-benchmarks (&key (distances '(256 512 1024))
-                                        (uptime-text "not collected (Nix sandbox)"))
+                                        (uptime-text "not collected (caller did not supply uptime)"))
   "Run the line-diff gate; UPTIME-TEXT is captured by the caller outside the sandbox.
 Only the production distance limit 512 is gated; other limits are diagnostics."
   (let ((old (%benchmark-line-text :original))
         (changed (%benchmark-line-text :changed))
         (different (%benchmark-line-text :different))
+        (repeated (%benchmark-repeated-line-text nil))
+        (repeated-changed (%benchmark-repeated-line-text t))
         (samples 25)
         (warmups 2)
         (reports nil))
     (assert (= 20000 (count #\Newline old) (count #\Newline changed)
                (count #\Newline different)))
+    (%benchmark-check-repeated-fixture repeated repeated-changed)
     (assert distances)
     (format t "~&line-diff uptime=~A~%" uptime-text)
     (dolist (distance distances)
       (let ((small nil)
+            (repetitive nil)
             (large nil))
         (dotimes (trial (+ warmups samples))
-          (dolist (kind (if (evenp trial) '(:ok :too-large) '(:too-large :ok)))
+          (dolist (kind (case (mod trial 3)
+                          (0 '(:unique :repeated :cutoff))
+                          (1 '(:repeated :cutoff :unique))
+                          (2 '(:cutoff :unique :repeated))))
             (let ((observation
                     (%benchmark-line-diff-sample
-                     old (if (eq kind :ok) changed different) distance kind)))
+                     (if (eq kind :repeated) repeated old)
+                     (ecase kind
+                       (:unique changed)
+                       (:repeated repeated-changed)
+                       (:cutoff different))
+                     distance (if (eq kind :cutoff) :too-large :ok))))
               (when (>= trial warmups)
-                (if (eq kind :ok)
-                    (push observation small)
-                    (push observation large))))))
-        (let ((small-report (%benchmark-line-diff-report
-                             "100-substitutions" distance warmups small))
-              (large-report (%benchmark-line-diff-report
-                             "all-different-cutoff" distance warmups large)))
-          (push small-report reports)
-          (push large-report reports)
-          ;; Print both workloads before any assertion so a failed gate retains
-          ;; the cutoff and allocation diagnostics as well as the sparse result.
+                (ecase kind
+                  (:unique (push observation small))
+                  (:repeated (push observation repetitive))
+                  (:cutoff (push observation large)))))))
+        (let ((current-reports
+                (list (%benchmark-line-diff-report "100-substitutions" distance warmups small)
+                      (%benchmark-line-diff-report "100-repetitive-substitutions" distance warmups repetitive)
+                      (%benchmark-line-diff-report "all-different-cutoff" distance warmups large))))
+          (dolist (report current-reports) (push report reports))
+          ;; Print every workload before any assertion to retain diagnostics
+          ;; for all three inputs if one budget fails.
           (when (= distance 512)
-            (dolist (report (list small-report large-report))
+            (dolist (report current-reports)
               (assert (<= (getf report :p95-ms)
-                          (if (string= (getf report :case) "100-substitutions") 100 500)))
+                          (if (string= (getf report :case) "all-different-cutoff") 500 100)))
               (assert (<= (getf report :peak-heap-upper-bound-bytes)
                           (* 32 1024 1024))))))))
     (nreverse reports)))

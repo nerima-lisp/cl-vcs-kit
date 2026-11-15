@@ -186,4 +186,8 @@
      (if (string= specification "owner/project") 1 0))
    ghq-iterations))
 
-(progn (load (asdf:system-relative-pathname "cl-vcs-kit" "bench/line-diff.lisp")) (funcall (find-symbol "RUN-LINE-DIFF-BENCHMARKS" "VCS-KIT/BENCHMARK")))
+(progn
+  (load (asdf:system-relative-pathname "cl-vcs-kit" "bench/line-diff.lisp"))
+  (funcall (find-symbol "RUN-LINE-DIFF-BENCHMARKS" "VCS-KIT/BENCHMARK")
+           :uptime-text (string-trim '(#\Newline #\Return)
+                                    (uiop:run-program '("uptime") :output :string))))

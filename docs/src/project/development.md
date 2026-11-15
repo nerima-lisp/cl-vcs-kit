@@ -79,13 +79,11 @@ unexplained drop fails the coverage gate.
 Run the benchmark from the checkout root with the workspace system registered:
 
 ```sh
-uptime
 nix develop --command sbcl --noinform \
   --eval '(require :asdf)' \
   --eval '(asdf:clear-system "cl-vcs-kit")' \
   --eval '(asdf:load-asd (truename "cl-vcs-kit.asd"))' \
   --script bench/performance.lisp
-uptime
 ```
 
 The script measures parser workloads and 20,000-line diffs.
@@ -94,20 +92,30 @@ conservative peak heap bound that includes both input strings. The line-diff
 results use two excluded warmups and 25 measured samples per workload and
 limit, with a full collection before each sample. The p95 uses the nearest
 rank, the 24th sorted observation out of 25. The default limit's p95 must be
-at most 100 ms for 100 replacements and 500 ms for entirely different inputs;
+at most 100 ms for 100 replacements in unique or repetition-heavy text and
+500 ms for entirely different inputs;
 the conservative peak heap bound must be at most 32 MiB. A failing budget
-makes the script exit nonzero. Keep both `uptime` outputs with the result;
-maximum times remain diagnostic.
+makes the script exit nonzero. The entry point invokes `uptime` directly and
+prints the captured load information before the line-diff workloads; `uptime`
+must be available on `PATH`. Maximum times remain diagnostic.
+
+The repetition-heavy fixture contains 18,000 blank lines and 2,000 identical
+`repeat` lines. One hundred evenly spaced `repeat` lines become `changed`,
+which never occurs in the original. Fixture checks establish a common
+subsequence of 19,900 lines and the matching upper bound, independently of the
+diff algorithm, so the expected shortest edit distance is 200. The three
+workloads rotate execution order between trials.
 
 `bench/line-diff.lisp` also supplies a definitions-only runner for consumer
 checks. After loading the library and that file, call
 `vcs-kit/benchmark:run-line-diff-benchmarks :distances '(512)`. This benchmark
 package is separate from the production API. Callers can provide captured
-load information through `:uptime-text`; sandboxed runs label missing load
-information explicitly. Output includes GC CPU time during measured calls;
-the full collections before samples are excluded. GC counts are marked
-unavailable because SBCL's asynchronous hook delivery cannot assign each
-collection to the measured call reliably.
+load information through `:uptime-text`. If the caller omits it, the runner
+prints `not collected (caller did not supply uptime)`; it does not detect
+whether it runs in a sandbox. Output includes GC CPU time during measured calls;
+the full collections before samples are excluded. The standard runner does
+not collect GC counts and marks them unavailable. Asynchronous GC hook
+delivery must not be used to attribute collections to individual calls.
 See the [release notes](release-v0.3.0.md) for the measured workloads and limits.
 
 ## Source and documentation changes

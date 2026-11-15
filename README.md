@@ -68,7 +68,7 @@ Pin a release tag rather than following the default branch.
 
 For a local checkout, make it and its dependencies visible to the Common Lisp
 source registry, then `(asdf:load-system "cl-vcs-kit")`. The runtime
-dependencies are `cl-process-kit`, `cl-host-kit`, and `cl-log-kit`; the test
+dependencies are `cl-process-kit` 3.4.4 or later, `cl-host-kit`, and `cl-log-kit`; the test
 system adds `cl-weave`. Host-facing pathname, temporary-directory, and
 command-line operations are provided by `cl-host-kit`; the runtime surface does
 not depend on ASDF's `uiop` utilities. The flake also supplies

@@ -146,7 +146,8 @@ Their result types include `vcs-status-snapshot`, `vcs-status-entry`,
                           :max-edit-distance 512)
 ```
 
-Paths are optional labels. `context` is the nonnegative number of unchanged
+Paths are optional labels and must not contain LF or CR; invalid labels signal
+a `type-error`. `context` is the nonnegative number of unchanged
 lines retained before and after a change, defaulting to 3. Lines split at LF;
 CR characters remain part of their text. An empty string has no lines. The
 presence of a final LF participates in equality, so adding or removing it is
@@ -162,6 +163,17 @@ distance. Distance counts insertions and deletions, so replacing one line
 normally costs two. The default limit is 512; the search stops by distance,
 independently of elapsed time.
 
+For N old lines, M new lines, and B = min(`max-edit-distance`, N + M),
+the retained search history uses O(B²) fixnum storage. Each distance layer
+stores only its active diagonal band, at most B + 1 entries. A cutoff search
+retains (B + 1)(B + 2)/2 entries in total. On 64-bit SBCL, B = 2048 therefore
+needs about 16.8 MB for history payload alone, excluding array headers.
+Overall diff storage is O(total input characters + B²), including line
+bookkeeping, copied line text, and output hunks. The 32 MiB benchmark budget
+applies to the [documented 20,000-line fixtures](../project/release-v0.3.0.md#in-memory-line-diffs)
+at the default limit 512; increasing the limit can exceed
+that budget.
+
 Each `line-diff-hunk` exposes `line-diff-hunk-old-start`,
 `line-diff-hunk-old-count`, `line-diff-hunk-new-start`,
 `line-diff-hunk-new-count`, and `line-diff-hunk-lines`. Starts use unified-diff
@@ -176,7 +188,8 @@ or `:insert`), `line-diff-line-text` (without LF), and
 `---` and `+++` headers, hunk ranges, and `\ No newline at end of file`
 markers where needed. Omitted path labels default to `a` and `b`. Identical
 inputs format as an empty string. Check the status first: formatting a cutoff
-result signals an error.
+result signals an error. Formatting also rejects path labels containing LF or
+CR with a `type-error`.
 
 ## Async and cancellation
 
