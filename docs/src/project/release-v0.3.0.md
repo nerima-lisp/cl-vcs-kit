@@ -44,15 +44,37 @@ allocation, and GC CPU time are also reported. Load information is captured
 with an actual `uptime` invocation in the benchmark entry point.
 
 The [development guide](development.md#line-diff-benchmark) gives the
-benchmark command for the pinned environment. The local measurements below
-used SBCL 2.6.8 on aarch64-darwin with manually registered dependencies,
-including `cl-process-kit` 3.4.4, matching the Nix input's version.
+benchmark command for the pinned environment.
 
-The table below records only the local aarch64-darwin measurement of the
-integer-token implementation. That `bench/performance.lisp` run used a fresh
-Lisp process and workspace FASLs compiled into an isolated directory.
-The entry point captured load averages of 97.81, 88.22, and 85.84. At the
-512-edit limit, each row contains 25 measured samples after two warmups:
+### Consumer CI measurements
+
+[loom probe CI run 43669681392](https://github.com/nerima-lisp/loom/actions/runs/43669681392)
+measured the integer-token implementation inside the loom editor's Lisp image
+on x86_64-linux and aarch64-darwin. Both normal and coverage-instrumented
+images used the 512-edit limit, two warmups, and 25 measured samples per
+workload. The table reports p95 elapsed time in milliseconds:
+
+| Workload | Linux normal | Linux coverage | macOS normal | macOS coverage |
+| --- | ---: | ---: | ---: | ---: |
+| 100 replacements, unique lines | 19.000 | 20.001 | 31.534 | 26.322 |
+| 100 replacements, repeated lines | 14.000 | 14.000 | 16.228 | 16.185 |
+| 100 replacements, initially blank | 12.000 | 12.000 | 13.892 | 13.873 |
+| 256 replacements, initially blank | 18.000 | 19.000 | 49.491 | 25.541 |
+| Entirely different inputs | 24.000 | 23.000 | 32.385 | 28.071 |
+
+All four image/platform combinations passed the 100 ms replacement and
+500 ms cutoff budgets. The largest conservative heap upper bound was
+9,815,488 bytes, below 32 MiB. The consumer runner did not supply `uptime`;
+the logs explicitly mark it uncollected. The kit's own CI runs an Ubuntu Nix
+flake check and has no benchmark job.
+
+### High-load local reference measurements
+
+Local measurements used SBCL 2.6.8 on aarch64-darwin with manually registered
+dependencies, including `cl-process-kit` 3.4.4, matching the Nix input's version.
+The integer-token `bench/performance.lisp` run recorded load averages of
+97.81, 88.22, and 85.84, approximately 90. At the 512-edit limit, each row
+contains 25 measured samples after two warmups:
 
 | Workload | Median (ms) | p95 (ms) | Maximum (ms) | Heap upper bound (bytes) |
 | --- | ---: | ---: | ---: | ---: |
@@ -74,26 +96,24 @@ For 100 and 256 replacements, wall/CPU times were 9.056/7.649 ms and
 14.930/14.142 ms; allocations were 5,688,304 and 6,567,952 bytes.
 Both calls recorded zero collections and zero GC CPU time. Native collection
 counts agreed with the synchronous GC log and epoch state; idle and forced-GC
-controls validated the counter. These two diagnostic calls do not change the
-failed 25-sample time gate or establish its cause.
+controls validated the counter. These two diagnostic calls do not establish
+the cause of the local timing variation.
 
-The preceding string-comparison implementation also ran locally with the
-same 25-sample protocol and load averages of 89.06, 89.93, and 90.23:
+The earlier development string-comparison implementation also ran locally
+with the same 25-sample protocol and load averages of 89.06, 89.93, and 90.23:
 
 | Initially blank workload | Median (ms) | p95 (ms) | Maximum (ms) |
 | --- | ---: | ---: | ---: |
 | 100 replacements | 5.541 | 23.436 | 61.352 |
 | 256 replacements | 28.495 | 146.230 | 213.558 |
 
-These separate runs do not establish a speedup; the final local time gate
-remains unmet. The 512-edit default supports all replacement fixtures while
-limiting the retained search history.
+The local failures remain reference observations under high load; the
+consumer CI measurements above provide the release performance evidence.
+Separate runs do not establish a speedup. The 512-edit default supports all
+replacement fixtures while limiting the retained search history.
 Active diagonal bands reduce that history's storage, but its growth remains
 quadratic in the distance bound; the [API reference](../reference/api.md#in-memory-line-diffs)
 describes the bound and the input-storage costs.
-
-These are local measurements, not cross-platform performance evidence.
-The kit's CI runs an Ubuntu Nix flake check; it has no benchmark job.
 
 The [API reference](../reference/api.md#in-memory-line-diffs) describes the
 result accessors and line-number conventions.
