@@ -13,9 +13,18 @@
               (%make-line-diff-line :context (subseq text start end) (not (null end))))
         (when end (setf start (1+ end)))))))
 
-(defun %line-diff-equal-p (left right)
-  (and (eq (line-diff-line-newline-p left) (line-diff-line-newline-p right))
-       (string= (line-diff-line-text left) (line-diff-line-text right))))
+(defun %line-diff-tokens (lines identifiers)
+  (let ((tokens (make-array (length lines) :element-type 'fixnum)))
+    (dotimes (index (length lines) tokens)
+      (let* ((line (aref lines index))
+             (text (line-diff-line-text line))
+             (identifier (or (gethash text identifiers)
+                             (setf (gethash text identifiers)
+                                   (hash-table-count identifiers)))))
+        ;; The low bit keeps identical text with and without a final LF distinct.
+        (setf (aref tokens index)
+              (logior (ash identifier 1)
+                      (if (line-diff-line-newline-p line) 1 0)))))))
 
 (defun %line-diff-predecessor (frontier diagonal distance)
   (let ((index (ash (+ diagonal distance) -1)))
@@ -54,8 +63,12 @@
     (when (> (abs (- old-count new-count)) bound)
       (return-from %line-diff-search (values nil nil)))
     ;; The seed is the distance -1 layer at diagonal 1, before any input.
-    (let ((previous (make-array 1 :element-type 'fixnum :initial-element 0))
-          (trace (make-array (1+ bound))))
+    (let* ((identifiers (make-hash-table :test #'equal :size (+ old-count new-count)))
+           (old-tokens (%line-diff-tokens old identifiers))
+           (new-tokens (%line-diff-tokens new identifiers))
+           (previous (make-array 1 :element-type 'fixnum :initial-element 0))
+           (trace (make-array (1+ bound))))
+      (declare (type (simple-array fixnum (*)) old-tokens new-tokens))
       (loop for distance from 0 to bound do
         (let ((current (make-array (1+ distance) :element-type 'fixnum)))
           (loop for diagonal from (- distance) to distance by 2
@@ -65,7 +78,7 @@
                          (if (< predecessor diagonal) 1 0)))
                    (y (- x diagonal)))
               (loop while (and (< x old-count) (< y new-count)
-                               (%line-diff-equal-p (aref old x) (aref new y)))
+                               (= (aref old-tokens x) (aref new-tokens y)))
                     do (incf x) (incf y))
               (setf (aref current index) x)
               (when (and (>= x old-count) (>= y new-count))
@@ -113,6 +126,12 @@
                  :lines (loop for index from start below end collect (aref lines index)))
                 hunks))))
     (nreverse hunks)))
+
+(defun %line-diff-path-label-p (path)
+  (or (null path)
+      (and (stringp path)
+           (not (find #\Newline path))
+           (not (find #\Return path)))))
 
 (defun compute-line-diff (old-text new-text &key old-path new-path (context 3) (max-edit-distance 512))
   "Compare two strings without I/O, returning a LINE-DIFF-RESULT.
@@ -172,8 +191,3 @@ an error."
           (write-line (line-diff-line-text line) stream)
           (unless (line-diff-line-newline-p line)
             (write-line "\\ No newline at end of file" stream)))))))
-(defun %line-diff-path-label-p (path)
-  (or (null path)
-      (and (stringp path)
-           (not (find #\Newline path))
-           (not (find #\Return path)))))

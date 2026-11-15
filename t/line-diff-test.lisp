@@ -20,6 +20,7 @@
                     (max (aref lengths row (1+ column))
                          (aref lengths (1+ row) column))))))
       (- (+ rows columns) (* 2 (aref lengths rows columns))))))
+
 (describe "pure line differences"
   (it "has no hunks for empty or identical inputs"
     (dolist (text (list "" "same" (format nil "same~%")))
@@ -117,10 +118,11 @@
     (let ((inputs (list "")))
       (loop for length from 1 to 4 do
         (dotimes (bits (ash 1 length))
-          (push (with-output-to-string (stream)
-                  (dotimes (index length)
-                    (write-line (if (logbitp index bits) "a" "b") stream)))
-                inputs)))
+          (let ((text (with-output-to-string (stream)
+                        (dotimes (index length)
+                          (write-line (if (logbitp index bits) "a" "b") stream)))))
+            (push text inputs)
+            (push (subseq text 0 (1- (length text))) inputs))))
       (dolist (old inputs)
         (dolist (new inputs)
           (let* ((distance (%line-diff-lcs-distance old new))
@@ -149,6 +151,7 @@
                          (when (line-diff-line-newline-p line)
                            (terpri stream)))))
                    :to-equal (if (eq side :old) old new))))))))))
+
 (describe "line diff review boundaries"
   ;; Golden output captured from GNU diffutils 3.12 with -U3 --label a --label b.
   (it "matches GNU diff when exactly six unchanged lines join two edits"
