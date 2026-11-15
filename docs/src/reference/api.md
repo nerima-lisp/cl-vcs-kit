@@ -166,8 +166,9 @@ independently of elapsed time.
 For N old lines, M new lines, and B = min(`max-edit-distance`, N + M),
 the retained search history uses O(B²) fixnum storage. Each distance layer
 stores only its active diagonal band, at most B + 1 entries. A cutoff search
-retains (B + 1)(B + 2)/2 entries in total. On 64-bit SBCL, B = 2048 therefore
-needs about 16.8 MB for history payload alone, excluding array headers.
+retains at most (B + 1)(B + 2)/2 entries in total. On 64-bit SBCL, B = 2048 gives
+an upper bound of about 16.8 MB for history payload, excluding array headers
+and the trace vector's pointers to layers.
 Overall diff storage is O(total input characters + B²), including line
 bookkeeping, copied line text, and output hunks. The 32 MiB benchmark budget
 applies to the [documented 20,000-line fixtures](../project/release-v0.3.0.md#in-memory-line-diffs)

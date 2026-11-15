@@ -16,13 +16,22 @@ status `:too-large`, no hunks, and no edit distance. This limit is deterministic
 and does not depend on a wall-clock deadline. Callers must check the status
 before formatting the result.
 
-`bench/performance.lisp` compares limits 256, 512, and 1024 on three 20,000-line
+The search compares integer line tokens. One shared table assigns matching
+text the same ID across both inputs, with final-newline state encoded in the
+token. Hunks retain the original text and the public API is unchanged.
+
+`bench/performance.lisp` compares limits 512, 256, and 1024 on five 20,000-line
 fixtures: 100 evenly spaced replacements in unique text, the same number of
-replacements in repetition-heavy text, and entirely different inputs.
+replacements in repetition-heavy text, 100 or 256 replacements in initially
+blank text, and entirely different inputs.
 The repeated fixture has 18,000 blank lines and 2,000 identical `repeat` lines;
 100 of the latter become `changed`. Independent common-subsequence checks
-prove that its shortest edit distance is 200.
-The script checks the default limit's p95 against 100 ms for either
+prove that its shortest edit distance is 200. In the all-blank fixtures,
+each replacement introduces a sentinel absent from the original. Removing
+those sentinels supplies a longest common subsequence, independently proving
+shortest distances of 200 and 512. The latter fixture returns `:too-large`
+at limit 256 and distance 512 at limits 512 and 1024.
+The script checks the default limit's p95 against 100 ms for every
 replacement case, 500 ms for
 cutoff, and 32 MiB for the conservative peak heap bound. The bound includes
 both input strings and all heap allocation during one call; it excludes the
@@ -39,29 +48,52 @@ benchmark command for the pinned environment. The local measurements below
 used SBCL 2.6.8 on aarch64-darwin with manually registered dependencies,
 including `cl-process-kit` 3.4.4, matching the Nix input's version.
 
-The table below records only the local aarch64-darwin measurement. That
-`bench/performance.lisp` run used a fresh
+The table below records only the local aarch64-darwin measurement of the
+integer-token implementation. That `bench/performance.lisp` run used a fresh
 Lisp process and workspace FASLs compiled into an isolated directory.
-The entry point captured load averages of 80.93, 149.77, and 122.15. At the
-512-edit limit it produced:
+The entry point captured load averages of 97.81, 88.22, and 85.84. At the
+512-edit limit, each row contains 25 measured samples after two warmups:
 
 | Workload | Median (ms) | p95 (ms) | Maximum (ms) | Heap upper bound (bytes) |
 | --- | ---: | ---: | ---: | ---: |
-| 100 replacements, unique lines | 7.360 | 11.688 | 18.450 | 7,673,600 |
-| 100 replacements, repeated lines | 7.398 | 10.003 | 21.010 | 4,512,768 |
-| Entirely different inputs | 12.139 | 17.730 | 22.199 | 8,170,400 |
+| 100 replacements, unique lines | 60.233 | 178.286 | 282.794 | 9,310,368 |
+| 100 replacements, repeated lines | 12.007 | 78.155 | 93.813 | 6,171,808 |
+| 100 replacements, initially blank | 7.891 | 122.046 | 151.471 | 5,913,984 |
+| 256 replacements, initially blank | 53.243 | 284.686 | 529.750 | 7,307,696 |
+| Entirely different inputs | 139.796 | 255.042 | 269.301 | 9,689,792 |
 
-The p95 and heap budgets passed. Maximum allocations were 6,001,232,
-4,256,336, and 6,419,232 bytes respectively; measured GC CPU time was zero.
-The standard runner did not collect GC counts. The 512-edit default supports
-the 200-edit replacement fixtures while limiting the retained search history.
+The unique-line and both initially blank workloads exceeded the 100 ms p95
+budget, so the script exited nonzero before testing the diagnostic limits.
+The cutoff and all heap budgets passed. Maximum allocations, in table order,
+were 7,638,000, 5,915,376, 5,751,152, 7,140,496, and 7,938,624 bytes;
+measured GC CPU time was zero. The standard runner did not collect GC counts.
+
+A separate diagnostic made one call per initially blank workload on the same
+integer-token implementation, at load averages 111.86, 97.79, and 90.37.
+For 100 and 256 replacements, wall/CPU times were 9.056/7.649 ms and
+14.930/14.142 ms; allocations were 5,688,304 and 6,567,952 bytes.
+Both calls recorded zero collections and zero GC CPU time. Native collection
+counts agreed with the synchronous GC log and epoch state; idle and forced-GC
+controls validated the counter. These two diagnostic calls do not change the
+failed 25-sample time gate or establish its cause.
+
+The preceding string-comparison implementation also ran locally with the
+same 25-sample protocol and load averages of 89.06, 89.93, and 90.23:
+
+| Initially blank workload | Median (ms) | p95 (ms) | Maximum (ms) |
+| --- | ---: | ---: | ---: |
+| 100 replacements | 5.541 | 23.436 | 61.352 |
+| 256 replacements | 28.495 | 146.230 | 213.558 |
+
+These separate runs do not establish a speedup; the final local time gate
+remains unmet. The 512-edit default supports all replacement fixtures while
+limiting the retained search history.
 Active diagonal bands reduce that history's storage, but its growth remains
 quadratic in the distance bound; the [API reference](../reference/api.md#in-memory-line-diffs)
 describes the bound and the input-storage costs.
 
-These measurements do not establish cross-platform performance. macOS CI
-has not run because its runner update is pending; the local Darwin
-measurement is not a macOS CI result.
+These are local measurements, not cross-platform performance evidence.
+The kit's CI runs an Ubuntu Nix flake check; it has no benchmark job.
 
 The [API reference](../reference/api.md#in-memory-line-diffs) describes the
 result accessors and line-number conventions.

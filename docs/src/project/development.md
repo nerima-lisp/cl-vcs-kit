@@ -92,8 +92,8 @@ conservative peak heap bound that includes both input strings. The line-diff
 results use two excluded warmups and 25 measured samples per workload and
 limit, with a full collection before each sample. The p95 uses the nearest
 rank, the 24th sorted observation out of 25. The default limit's p95 must be
-at most 100 ms for 100 replacements in unique or repetition-heavy text and
-500 ms for entirely different inputs;
+at most 100 ms for each replacement workload, including 256 replacements
+in initially blank text, and 500 ms for entirely different inputs;
 the conservative peak heap bound must be at most 32 MiB. A failing budget
 makes the script exit nonzero. The entry point invokes `uptime` directly and
 prints the captured load information before the line-diff workloads; `uptime`
@@ -103,8 +103,17 @@ The repetition-heavy fixture contains 18,000 blank lines and 2,000 identical
 `repeat` lines. One hundred evenly spaced `repeat` lines become `changed`,
 which never occurs in the original. Fixture checks establish a common
 subsequence of 19,900 lines and the matching upper bound, independently of the
-diff algorithm, so the expected shortest edit distance is 200. The three
-workloads rotate execution order between trials.
+diff algorithm, so the expected shortest edit distance is 200.
+
+Two further fixtures start with 20,000 blank lines and replace either 100 or
+256 evenly spaced lines with `changed`. No sentinel occurs in the original,
+so a common subsequence has at most 20,000 minus the replacement count lines.
+Removing the sentinels supplies a witness of that length, proving shortest
+edit distances of 200 and 512 respectively. At limit 256, the latter fixture
+must return `:too-large`; at limits 512 and 1024, it must return distance 512.
+Changing a limit does not change a fixture's shortest distance. All five
+workloads rotate execution order between trials. Each result is checked for
+its expected distance and insertion/deletion counts, or its cutoff status.
 
 `bench/line-diff.lisp` also supplies a definitions-only runner for consumer
 checks. After loading the library and that file, call
