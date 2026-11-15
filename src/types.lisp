@@ -283,19 +283,31 @@ PRIMARY-P is true for the first root only and NIL for every later one."
   (path "" :type string)
   (primary-p nil :type boolean))
 
-(defstruct (line-diff-line (:constructor %make-line-diff-line (kind text newline-p)))
+(defstruct (line-diff-line
+            (:constructor %make-line-diff-line (kind text newline-p))
+            (:copier nil))
+  "One hunk line whose KIND is :CONTEXT, :DELETE, or :INSERT.
+TEXT excludes LF; NEWLINE-P records whether the input line ended with LF."
   (kind :context :type (member :context :delete :insert))
   (text "" :type string)
   (newline-p t :type boolean))
 
-(defstruct (line-diff-hunk (:constructor %make-line-diff-hunk))
+(defstruct (line-diff-hunk
+            (:constructor %make-line-diff-hunk)
+            (:copier nil))
+  "A contiguous unified-diff range with old/new start lines, counts, and LINES.
+Starts are one-based; zero-length ranges name the preceding line."
   (old-start 0 :type (integer 0 *))
   (old-count 0 :type (integer 0 *))
   (new-start 0 :type (integer 0 *))
   (new-count 0 :type (integer 0 *))
   (lines nil :type list))
 
-(defstruct (line-diff-result (:constructor %make-line-diff-result))
+(defstruct (line-diff-result
+            (:constructor %make-line-diff-result)
+            (:copier nil))
+  "A bounded line difference with STATUS :OK or :TOO-LARGE.
+Cutoff results have no HUNKS or EDIT-DISTANCE; paths are optional labels."
   (status :ok :type (member :ok :too-large))
   (hunks nil :type list)
   (old-path nil :type (or null string))

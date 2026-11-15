@@ -17,22 +17,22 @@
   (and (eq (line-diff-line-newline-p left) (line-diff-line-newline-p right))
        (string= (line-diff-line-text left) (line-diff-line-text right))))
 
-(defun %line-diff-predecessor (frontier offset diagonal distance)
-  (if (or (= diagonal (- distance))
-          (and (/= diagonal distance)
-               (< (aref frontier (+ offset diagonal -1))
-                  (aref frontier (+ offset diagonal 1)))))
-      (1+ diagonal)
-      (1- diagonal)))
+(defun %line-diff-predecessor (frontier diagonal distance)
+  (let ((index (ash (+ diagonal distance) -1)))
+    (if (or (= diagonal (- distance))
+            (and (/= diagonal distance)
+                 (< (aref frontier (1- index)) (aref frontier index))))
+        (1+ diagonal)
+        (1- diagonal))))
 
-(defun %line-diff-backtrack (old new trace distance offset)
+(defun %line-diff-backtrack (old new trace distance)
   (let ((x (length old))
         (y (length new))
         (lines nil))
     (loop for step from distance downto 1 do
       (let* ((previous (aref trace (1- step)))
-             (diagonal (%line-diff-predecessor previous offset (- x y) step))
-             (previous-x (aref previous (+ offset diagonal)))
+             (diagonal (%line-diff-predecessor previous (- x y) step))
+             (previous-x (aref previous (ash (+ diagonal step -1) -1)))
              (previous-y (- previous-x diagonal)))
         (loop while (and (> x previous-x) (> y previous-y)) do
           (push (aref old (decf x)) lines)
@@ -53,24 +53,27 @@
          (bound (min limit (+ old-count new-count))))
     (when (> (abs (- old-count new-count)) bound)
       (return-from %line-diff-search (values nil nil)))
-    (let* ((offset (1+ bound))
-           (frontier (make-array (+ (* 2 bound) 3) :element-type 'fixnum :initial-element 0))
-           (trace (make-array (1+ bound))))
+    ;; The seed is the distance -1 layer at diagonal 1, before any input.
+    (let ((previous (make-array 1 :element-type 'fixnum :initial-element 0))
+          (trace (make-array (1+ bound))))
       (loop for distance from 0 to bound do
-        (loop for diagonal from (- distance) to distance by 2 do
-          (let* ((previous (%line-diff-predecessor frontier offset diagonal distance))
-                 (x (+ (aref frontier (+ offset previous))
-                       (if (< previous diagonal) 1 0)))
-                 (y (- x diagonal)))
-            (loop while (and (< x old-count) (< y new-count)
-                             (%line-diff-equal-p (aref old x) (aref new y)))
-                  do (incf x) (incf y))
-            (setf (aref frontier (+ offset diagonal)) x)
-            (when (and (>= x old-count) (>= y new-count))
-              (return-from %line-diff-search
-                (values (%line-diff-backtrack old new trace distance offset) distance)))))
-        ;; Each layer is retained only up to the deterministic distance bound.
-        (setf (aref trace distance) (copy-seq frontier)))
+        (let ((current (make-array (1+ distance) :element-type 'fixnum)))
+          (loop for diagonal from (- distance) to distance by 2
+                for index from 0 do
+            (let* ((predecessor (%line-diff-predecessor previous diagonal distance))
+                   (x (+ (aref previous (ash (+ predecessor distance -1) -1))
+                         (if (< predecessor diagonal) 1 0)))
+                   (y (- x diagonal)))
+              (loop while (and (< x old-count) (< y new-count)
+                               (%line-diff-equal-p (aref old x) (aref new y)))
+                    do (incf x) (incf y))
+              (setf (aref current index) x)
+              (when (and (>= x old-count) (>= y new-count))
+                (return-from %line-diff-search
+                  (values (%line-diff-backtrack old new trace distance) distance)))))
+          ;; Only diagonals -d, -d+2, ..., d are reachable in layer d.
+          (setf (aref trace distance) current
+                previous current)))
       (values nil nil))))
 
 (defun %line-diff-context-p (line)
@@ -117,13 +120,17 @@ The default edit-distance limit is 512 insertions plus deletions; replacements
 cost two. A distance above the limit returns :TOO-LARGE with no partial hunks
 or edit distance. The bound is deterministic and never uses elapsed time.
 CONTEXT defaults to three lines. LF separates lines; CR remains part of the
-text. A final newline participates in equality. Paths are optional labels.
+text. A final newline participates in equality. Optional path labels must be
+strings without LF or CR, or NIL; other values signal TYPE-ERROR.
 Hunk starts are one-based except zero-length ranges, which name the preceding
-line (zero at the beginning). Inputs are not modified."
+line (zero at the beginning). Inputs are not modified.
+For D = min(MAX-EDIT-DISTANCE, old line count + new line count), temporary
+storage is O(total input characters + D^2). Trace layer d retains only its d+1
+reachable diagonals, for at most (D+1)(D+2)/2 fixnum entries."
   (check-type old-text string)
   (check-type new-text string)
-  (check-type old-path (or null string))
-  (check-type new-path (or null string))
+  (check-type old-path (satisfies %line-diff-path-label-p))
+  (check-type new-path (satisfies %line-diff-path-label-p))
   (check-type context (integer 0 *))
   (check-type max-edit-distance (integer 0 *))
   (multiple-value-bind (lines distance)
@@ -139,8 +146,12 @@ line (zero at the beginning). Inputs are not modified."
 
 (defun format-unified-diff (result)
   "Format successful RESULT as unified text; identical inputs produce an empty string.
-Omitted path labels are a and b. A :TOO-LARGE result signals an error."
+Omitted path labels are a and b. Labels containing LF or CR signal TYPE-ERROR,
+including labels changed through result accessors. A :TOO-LARGE result signals
+an error."
   (check-type result line-diff-result)
+  (check-type (line-diff-result-old-path result) (satisfies %line-diff-path-label-p))
+  (check-type (line-diff-result-new-path result) (satisfies %line-diff-path-label-p))
   (unless (eq (line-diff-result-status result) :ok)
     (error "The line difference exceeds the edit-distance limit."))
   (with-output-to-string (stream)
@@ -161,3 +172,8 @@ Omitted path labels are a and b. A :TOO-LARGE result signals an error."
           (write-line (line-diff-line-text line) stream)
           (unless (line-diff-line-newline-p line)
             (write-line "\\ No newline at end of file" stream)))))))
+(defun %line-diff-path-label-p (path)
+  (or (null path)
+      (and (stringp path)
+           (not (find #\Newline path))
+           (not (find #\Return path)))))

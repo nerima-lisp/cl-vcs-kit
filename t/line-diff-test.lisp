@@ -1,5 +1,25 @@
 (in-package #:vcs-kit/test)
 
+(defun %line-diff-lcs-distance (old-text new-text)
+  (flet ((input-lines (text)
+           (with-input-from-string (stream text)
+             (loop for (line missing-newline-p) =
+                     (multiple-value-list (read-line stream nil :eof))
+                   until (eq line :eof)
+                   collect (cons line (not missing-newline-p))))))
+    (let* ((old (coerce (input-lines old-text) 'vector))
+           (new (coerce (input-lines new-text) 'vector))
+           (rows (length old))
+           (columns (length new))
+           (lengths (make-array (list (1+ rows) (1+ columns)) :initial-element 0)))
+      (dotimes (row rows)
+        (dotimes (column columns)
+          (setf (aref lengths (1+ row) (1+ column))
+                (if (equal (aref old row) (aref new column))
+                    (1+ (aref lengths row column))
+                    (max (aref lengths row (1+ column))
+                         (aref lengths (1+ row) column))))))
+      (- (+ rows columns) (* 2 (aref lengths rows columns))))))
 (describe "pure line differences"
   (it "has no hunks for empty or identical inputs"
     (dolist (text (list "" "same" (format nil "same~%")))
@@ -103,9 +123,20 @@
                 inputs)))
       (dolist (old inputs)
         (dolist (new inputs)
-          (let* ((result (compute-line-diff old new :context 8))
+          (let* ((distance (%line-diff-lcs-distance old new))
+                 (result (compute-line-diff old new :context 8))
                  (lines (and (line-diff-result-hunks result)
                              (line-diff-hunk-lines (first (line-diff-result-hunks result))))))
+            (expect (line-diff-result-edit-distance result) :to-equal distance)
+            (expect (count-if (lambda (line) (not (eq (line-diff-line-kind line) :context))) lines)
+                    :to-equal distance)
+            (expect (line-diff-result-status
+                     (compute-line-diff old new :max-edit-distance distance))
+                    :to-be :ok)
+            (when (plusp distance)
+              (expect (line-diff-result-status
+                       (compute-line-diff old new :max-edit-distance (1- distance)))
+                      :to-be :too-large))
             (if (string= old new)
                 (expect lines :to-equal nil)
                 (dolist (side '(:old :new))
@@ -118,3 +149,39 @@
                          (when (line-diff-line-newline-p line)
                            (terpri stream)))))
                    :to-equal (if (eq side :old) old new))))))))))
+(describe "line diff review boundaries"
+  ;; Golden output captured from GNU diffutils 3.12 with -U3 --label a --label b.
+  (it "matches GNU diff when exactly six unchanged lines join two edits"
+    (expect (format-unified-diff
+             (compute-line-diff (format nil "a~%1~%2~%3~%4~%5~%6~%b~%")
+                                (format nil "x~%1~%2~%3~%4~%5~%6~%y~%")))
+            :to-equal
+            (format nil "--- a~%+++ b~%@@ -1,8 +1,8 @@~%-a~%+x~% 1~% 2~% 3~% 4~% 5~% 6~%-b~%+y~%")))
+  (it "matches GNU diff when seven unchanged lines separate two edits"
+    (expect (format-unified-diff
+             (compute-line-diff (format nil "a~%1~%2~%3~%4~%5~%6~%7~%b~%")
+                                (format nil "x~%1~%2~%3~%4~%5~%6~%7~%y~%")))
+            :to-equal
+            (format nil "--- a~%+++ b~%@@ -1,4 +1,4 @@~%-a~%+x~% 1~% 2~% 3~%@@ -6,4 +6,4 @@~% 5~% 6~% 7~%-b~%+y~%")))
+  (it "matches GNU diff for an unchanged final line without LF"
+    (expect (format-unified-diff
+             (compute-line-diff (format nil "a~%b") (format nil "x~%b")))
+            :to-equal
+            (format nil "--- a~%+++ b~%@@ -1,2 +1,2 @@~%-a~%+x~% b~%\\ No newline at end of file~%")))
+  (it "rejects LF and CR in either input path label"
+    (dolist (character '(#\Newline #\Return))
+      (let ((path (format nil "before~Cafter" character)))
+        (%expect-condition type-error
+          (compute-line-diff "a" "b" :old-path path))
+        (%expect-condition type-error
+          (compute-line-diff "a" "b" :new-path path)))))
+  (it "rejects path labels mutated to contain LF or CR before formatting"
+    (dolist (character '(#\Newline #\Return))
+      (dolist (side '(:old :new))
+        (dolist (new '("a" "b"))
+          (let ((result (compute-line-diff "a" new))
+                (path (format nil "before~Cafter" character)))
+            (ecase side
+              (:old (setf (line-diff-result-old-path result) path))
+              (:new (setf (line-diff-result-new-path result) path)))
+            (%expect-condition type-error (format-unified-diff result))))))))
